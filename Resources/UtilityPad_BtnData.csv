@@ -1,0 +1,5 @@
+name,row,col,img_src
+MENU,0,0,Graphics/Btn_menu.png
+ID,1,0,Graphics/Btn_ID.png
+POWER ON,4,0,Graphics/Btn_PowerOn.png
+POWER OFF,5,0,Graphics/Btn_PowerOff.png
