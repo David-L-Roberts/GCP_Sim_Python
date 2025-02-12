@@ -11,10 +11,10 @@ from MessageLib import txMessageCodes
 from Utils import SETTINGS
 from Logging import Log
 
+from ClsPage1 import Page1MainBody
+from StyleSettings import *
+
 COMS_READ_INTERVAL = 1.0
-C_HEADER_DEFAULT = "bg-[#0d1117]"
-C_MAIN_BODY = "bg-[#15181c]"
-C_SIDE_DRAWER = "bg-[#2a2d2e]"
 
 class MainApp:
     """ Class for running main application """
@@ -37,7 +37,7 @@ class MainApp:
         with ui.row().classes("w-full relative"):
             self.add_header()
         # page body
-        with ui.element('div').classes(f"w-full {C_MAIN_BODY} relative px-14 py-1"):
+        with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-14 py-1"):
             self.add_main_body()
 
         # object for processing received serial data
@@ -163,13 +163,7 @@ class MainApp:
     #   MAIN BODY
     # ========================================================================================
     def add_main_body(self):
-        self.create_rows()
-
-    def create_rows(self):
-        with ui.column().classes(f'bg-[#0d326b] px-20 py-14 mx-5 my-2'):
-            ui.label('CONTENT')
-            [ui.label(f'Line {i}') for i in range(70)]
-
+        Page1MainBody()
 
 
     # ========================================================================================

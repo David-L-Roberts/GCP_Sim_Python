@@ -60,7 +60,7 @@ class Log:
         logFunc = cls.logLevels[logFlag]
         logFunc(text)
 
-    @classmethod
-    def print(cls, text: str, end="\n"):
-        """Logs plain text to textbox widget and console. No edits."""
-        print(text, end=end)
+    # @classmethod
+    # def print(cls, text: str, end="\n"):
+    #     """Logs plain text to textbox widget and console. No edits."""
+    #     print(text, end=end)
