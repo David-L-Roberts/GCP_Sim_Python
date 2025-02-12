@@ -1,0 +1,5 @@
+{
+    "ComPortRx": "COM9",
+    "Baudrate": 9600,
+    "ReadTimeoutSec": 3
+}

@@ -1,0 +1,11 @@
+{
+    "ComPort": "COM8",
+    "Baudrate": 9600,
+    "ReadTimeoutSec": 1,
+    "CameraFront": 0,
+    "CameraBack": 2,
+    "CameraBlank": 10,
+    "DisableCameraFeed": false,
+    "CameraRefreshT": 0.1,
+    "Testing": true
+}

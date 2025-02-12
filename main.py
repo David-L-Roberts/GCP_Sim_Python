@@ -1,154 +1,264 @@
-from Settings import *
+from nicegui import ui, app
+from nicegui.events import KeyEventArguments
+import time
+from datetime import datetime
 
-import os
-import tkinter as tk
-import Logging as Log
-import serial
+from DataProcessor import DataProcessor
+from ComReader import ComReader
+from ComPort import ComPort
 
-from TitleBar import TitleBar
-from MenuBar import MenuBar
-from NumPad import NumPad
-from FunctionPad import FunctionPad
-from UtilityPad import UtilityPad
-from Button import Button
-from SerialReader import SerialReader
-from SerialQueue import SerialQueue
+from MessageLib import txMessageCodes
+from Utils import SETTINGS
+from Logging import Log
 
-
-# debug flag
-DEBUG = True
+COMS_READ_INTERVAL = 1.0
+C_HEADER_DEFAULT = "bg-[#0d1117]"
+C_MAIN_BODY = "bg-[#15181c]"
+C_SIDE_DRAWER = "bg-[#2a2d2e]"
 
 class MainApp:
-    # ardiuno serial Comms port object
-    arduino = serial.Serial()
+    """ Class for running main application """
+    def __init__(self) -> None:
+        # remove defualt page padding
+        ui.query('.nicegui-content').classes('p-30 m-0 gap-0')
 
-    def __init__(self, root: tk.Tk):
-        # log the start of the application
-        Log.log("Application Started.")
-        
-        # try to connect to arduino
-        try:
-            MainApp.arduino = serial.Serial(
-                port=SERIAL_PORT,
-                baudrate=BAUD_RATE,
-                timeout=0.1
-            )
-        except:
-            Log.log(f"Failed to connnect to arduino on port {SERIAL_PORT}.", logFlag="|ERROR|")
-        else:
-            Log.log_file(f"Ardiuno successfully connected on port {SERIAL_PORT}.", logFlag="|Info|")
-        
-
-        # configure root window
-        self.root = root
-        self.configure_root()
-
-        if DEBUG:
-            # instantiate thread that reads serial
-            self.thread_serialReader = SerialReader(MainApp.arduino)
-        # instantiate queuing thread
-        self.thread_queue = SerialQueue(
-            arduino=MainApp.arduino, 
-            maxsize=QUEUE_MAX_SIZE,
-            dequeue_interval_seconds=QUEUE_DELAY
+        # initialise comPort object
+        self.comPort = ComPort(
+            portNum=SETTINGS["ComPort"],
+            baudrate=SETTINGS["Baudrate"],
+            timeout=SETTINGS["ReadTimeoutSec"]
         )
 
-        # Instantiate button lookup table for serial action codes
-        Button.instantiate_serial_lookup()
-        # pass the queuing thread to the button class
-        Button.instantiate_queue_thread(self.thread_queue)
+        # Handle data received from serial 
+        self.comReader = ComReader(self.comPort)
+        ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
-        # Add menu bar
-        self.MenuBar = MenuBar(
-            master=self.root,
-            row=0,
-            col=0,
-        )
+        # page header
+        with ui.row().classes("w-full relative"):
+            self.add_header()
+        # page body
+        with ui.element('div').classes(f"w-full {C_MAIN_BODY} relative px-14 py-1"):
+            self.add_main_body()
 
-        # Add a Title bar to root window
-        self.Titlebar = TitleBar(
-            master=self.root,
-            text="ICE CONTROLS",
-            row=1,
-            col=0,
-        )
+        # object for processing received serial data
+        self.dataProcessor = DataProcessor(self.headerRow, self.clockLabel)
+        # add key bindings
+        self.keyboard = ui.keyboard(on_key=self.handle_key)
 
-        # frame for holding the ICE buttons
-        self.ice_buttons = tk.Frame(
-            master=self.root,
-            bg=GREY_1
-        )
-        self.ice_buttons.grid(
-            row=2,
-            column=0,
-        )
-        self.add_ice_buttons(self.ice_buttons)
+        # self.startup_transaction()
 
+    def startup_transaction(self):
+        Log.log("Attempting to establish connection to Arduino.")
+        while True:
+            self.comPort.writeSerial(txMessageCodes["Hello"])
+            self.serviceRxData()
+            if self.dataProcessor.checkACK():
+                Log.log("Arduino connected successfully.")
+                return 
+            time.sleep(3)
+            
+
+    # ========================================================================================
+    #   Header
+    # ========================================================================================
+    def add_header(self):
+        # header spacing allocation
+        basis_title = 30
+        basis_statusText = 40
+        basis_clock = 15
+        basis_menu = 15
+        # add header elements
+        self.headerRow = ui.header().classes(f'flex flex-row py-8 px-4 no-wrap h-[5vh] {C_HEADER_DEFAULT} items-center')
+        with self.headerRow:
+            # Header title text & icon
+            with ui.row().classes(f"basis-[{basis_title}%] items-center"):
+                ui.icon("train", color="#818cf8"). \
+                    classes(f"text-5xl")
+                ui.html('GCP Simulator <a class="text-bold text-[#818cf8]">HMI</a>'). \
+                    classes(f"text-lg text-left")
+            
+            # Controller status labels
+            with ui.row().classes(f"basis-[{basis_statusText}%] flex-row justify-center text-lg"):
+                self.style_indLabel_connect = "text-center text-teal-200"
+                self.style_indLabel_deconnect = "text-center text-rose-300"
+                self.style_indLabel_deactive = "text-center text-stone-500"
+
+                ui.label("Controller Status: ") \
+                    .classes("text-center text-bold text-[#818cf8]")
+                self.indLabelEnable = ui.label("Connected") \
+                    .classes(self.style_indLabel_connect)
+                self.indLabelDisable = ui.label("Disconnected") \
+                    .classes(self.style_indLabel_deactive)
+            
+            # TODO: remove from function, and take as input.
+                # issue with different pages creating their own instance. Should all refer back to single object, which gives them the time string.
+                # will be a similar system for updating controller status
+            # clock  
+            with ui.row().classes(f"basis-[{basis_clock}%] items-center justify-center gap-0 flex-row"):
+                ui.element('div').classes("basis-[25%]")
+                with ui.row().classes("basis-[75%]"):
+                    ui.icon("schedule", color="#818cf8"). \
+                        classes(f"text-3xl")
+                    self.clockLabel = ui.label("HH:MM:SS").classes(f"text-lg text-left pl-[3px] text-stone-400")
+            ui.timer(1.0, self.update_time)
+
+            # drop down menu    
+            with ui.row().classes(f"basis-[{basis_menu}%] items-center"):
+                ui.label("Menu").classes(f"text-lg text-right pr-[5px] ml-auto")
+                self.create_menu()
+
+    def create_menu(self):
+        with ui.button(icon='menu', color="indigo-500"):
+            with ui.menu() as menu:
+                if SETTINGS['Testing']:
+                    ui.menu_item(
+                        'Emergency Stop Enable', 
+                        lambda: self.dataProcessor.processCharCode('FA'), 
+                        auto_close=False
+                    )
+                    ui.menu_item(
+                        'Emergency Stop Disable', 
+                        lambda: self.dataProcessor.processCharCode('FE'), 
+                        auto_close=False
+                    )
+                    ui.menu_item(
+                        'Auto Break Enable', 
+                        lambda: self.dataProcessor.processCharCode('FB'), 
+                        auto_close=False
+                    )
+                    ui.menu_item(
+                        'Auto Break Disable', 
+                        lambda: self.dataProcessor.processCharCode('FC'), 
+                        auto_close=False
+                    )
+                    ui.separator()
+
+                ui.menu_item(
+                    'Front Camera (C)', 
+                    lambda: print("VideoSelector.setSource(0)"),
+                    auto_close=False
+                )
+                ui.menu_item(
+                    'Back Camera (B)', 
+                    lambda: print("VideoSelector.setSource(1)"),
+                    auto_close=False
+                )
+                ui.menu_item(
+                    'Disable Camera', 
+                    lambda: print("VideoSelector.setSource(2)"),
+                    auto_close=False
+                )
+                ui.separator()
+                
+                ui.menu_item('Terminate Application (K)', lambda: app.shutdown())
+                ui.separator()
+                
+                ui.menu_item('Close', on_click=menu.close)
+            
+    def update_time(self):
+            self.clockLabel.set_text(f"{datetime.now().strftime('%I:%M:%S')}")
 
     
-    def __del__(self):
-        # log the end of the application
-        Log.log("Application Terminated.")
+    # ========================================================================================
+    #   MAIN BODY
+    # ========================================================================================
+    def add_main_body(self):
+        self.create_rows()
 
-    def configure_root(self):
-        self.root.title("IRAS - ICE REMOTE ACCESS SYSTEM")
-        self.root.config(
-            padx=40, 
-            pady=15,
-            bg=GREY_1,
-        )
-        self.root.minsize(width=560, height=694)
-        self.root.resizable(width=True, height=True)
-
-        photo = tk.PhotoImage(file = WINDOW_ICON)
-        self.root.wm_iconphoto(True, photo)
-
-    
-    def add_ice_buttons(self, master: tk.Frame):
-        """Create all the ICE buttons and add them to the given master widget.
-        Creates the ICE: function pad; number pad; utility pad
-        """
-        # add Function pad buttons to root window
-        self.functionPad = FunctionPad(
-            master=master,
-            row=1,
-            col=0,
-        )
-
-        # Add a Numberpad to the root window
-        self.numPad = NumPad(
-            master=master,
-            row=1,
-            col=1,
-        )
-
-        # Add utility button pad to root window
-        self.utilPad = UtilityPad(
-            master=master,
-            row=1,
-            col=2,
-        )
+    def create_rows(self):
+        with ui.column().classes(f'bg-[#0d326b] px-20 py-14 mx-5 my-2'):
+            ui.label('CONTENT')
+            [ui.label(f'Line {i}') for i in range(70)]
 
 
 
-# ---------------------------- Open Web Cam ------------------------------- #
-def open_web_cam():
-    try:
-        os.system('cmd /c "start microsoft.windows.camera:"')
-    except:
-        Log.log("Webcam App failed to open.", logFlag="|WARNING|")
-    else:
-        Log.log("Webcam App opened successfully.")
+    # ========================================================================================
+    #   Key Bindings
+    # ========================================================================================
+    def handle_key(self, e: KeyEventArguments):
+        if (not e.action.keydown) or (e.action.repeat):
+            return
+        if (e.key == 'e'):
+            print("Key Pressed: E")
+            # self.eyeTrackingEnable()
+        elif (e.key == 'd'):
+            print("Key Pressed: D")
+            # self.eyeTrackingDisable()
+        elif (e.key == 'k'):
+            print("Key Pressed: K")
+            Log.log("Shutting Down Application.")
+            app.shutdown()
+        elif (e.key == 'c'):
+            print("Key Pressed: C") # switch to front webcam feed
+            # VideoSelector.setSource(0)
+        elif (e.key == 'b'):
+            print("Key Pressed: B") # switch to backward webcam feed
+            # VideoSelector.setSource(1)
 
 
-# ---------------------------- MAIN FUNCTION ------------------------------- #
+    # ========================================================================================
+    #   Manage Data Received
+    # ========================================================================================
+    def serviceRxData(self):
+        while True:
+            charCode = self.comReader.popNextMessage()
+            if charCode == None:
+                return  # no data to process
+            self.dataProcessor.processCharCode(charCode)
+
+    # ========================================================================================
+    #   Testing Ground
+    # ========================================================================================
+    def testButton(self):
+        print(self.comReader._rxDataQueue)
+
+
+    # ========================================================================================
+    #   NEW PAGE
+    # ========================================================================================
+    def add_new_page(self):
+        @ui.page('/page_layout')
+        def page_layout():
+            self.add_header()
+
+            with ui.left_drawer(top_corner=False, bottom_corner=False).classes(f'{C_SIDE_DRAWER}'):
+                ui.label('LEFT DRAWER')
+
+            with ui.right_drawer(fixed=False).classes(f'{C_SIDE_DRAWER}').props('bordered') as right_drawer:
+                ui.label('RIGHT DRAWER')
+
+            with ui.footer().classes(f'{C_HEADER_DEFAULT}'):
+                ui.label('FOOTER')
+
+            # with ui.column.classes(f'bg-[#0d326b] px-15 py-25'):
+            with ui.column().classes(f'bg-[#0d326b] px-20 py-14 mx-5 my-2'):
+                ui.label('CONTENT')
+                [ui.label(f'Line {i}') for i in range(100)]
+
+        # with ui.element('div').classes('flex flex-row text-lg flex-nowrap w-full h-full absolute'):
+        with ui.element('div'):
+            ui.link('show page with fancy layout', page_layout)
+            
+
+
+# =====================================
 
 def main():
-    # open_web_cam()
-    
-    root = tk.Tk()
-    mainApp = MainApp(root)
-    root.mainloop()
+    print("="*30)
+    Log.log("Application Start")
+    print("="*30)
 
-if __name__ == "__main__":
+    mainApp = MainApp()
+    ui.run(
+        title="GCP Simulator HMI", 
+        host='127.0.0.1',
+        port=10_000,
+        dark=True,
+        favicon='🚂',
+        show=False,
+        reload=False
+    )
+
+if __name__ in {"__main__", "__mp_main__"}:
     main()
+
