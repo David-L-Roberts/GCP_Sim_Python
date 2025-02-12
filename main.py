@@ -7,7 +7,7 @@ from DataProcessor import DataProcessor
 from ComReader import ComReader
 from ComPort import ComPort
 
-from MessageLib import txMessageCodes
+from MessageLib import ActionCodes, txMessageCodes
 from Utils import SETTINGS
 from Logging import Log
 
@@ -45,17 +45,23 @@ class MainApp:
         # add key bindings
         self.keyboard = ui.keyboard(on_key=self.handle_key)
 
-        # self.startup_transaction()
+        self.timerCheckComsHealth = ui.timer(5.0, self.startup_transaction)
+
 
     def startup_transaction(self):
         Log.log("Attempting to establish connection to Arduino.")
-        while True:
-            self.comPort.writeSerial(txMessageCodes["Hello"])
-            self.serviceRxData()
-            if self.dataProcessor.checkACK():
-                Log.log("Arduino connected successfully.")
-                return 
-            time.sleep(3)
+
+        msg: bytes = txMessageCodes[ActionCodes.HMI_HELLO]
+        self.comPort.writeSerial(msg)
+
+        if self.dataProcessor.checkACK():
+            Log.log("Arduino connected successfully.")
+            self.indLabelEnable.classes(replace=self.style_indLabel_connect)
+            self.indLabelDisable.classes(replace=self.style_indLabel_deactive)
+
+            self.timerCheckComsHealth.deactivate()
+            ui.notify("Arduino connected successfully", type='positive', position='center', progress=True, timeout=3_000)
+            return 
             
 
     # ========================================================================================
@@ -86,9 +92,9 @@ class MainApp:
                 ui.label("Controller Status: ") \
                     .classes("text-center text-bold text-[#818cf8]")
                 self.indLabelEnable = ui.label("Connected") \
-                    .classes(self.style_indLabel_connect)
-                self.indLabelDisable = ui.label("Disconnected") \
                     .classes(self.style_indLabel_deactive)
+                self.indLabelDisable = ui.label("Disconnected") \
+                    .classes(self.style_indLabel_deconnect)
             
             # TODO: remove from function, and take as input.
                 # issue with different pages creating their own instance. Should all refer back to single object, which gives them the time string.
@@ -113,29 +119,29 @@ class MainApp:
                 if SETTINGS['Testing']:
                     ui.menu_item(
                         'Emergency Stop Enable', 
-                        lambda: self.dataProcessor.processCharCode('FA'), 
+                        lambda: self.dataProcessor.processCharCode(b'<103>'), 
                         auto_close=False
                     )
                     ui.menu_item(
                         'Emergency Stop Disable', 
-                        lambda: self.dataProcessor.processCharCode('FE'), 
+                        lambda: self.dataProcessor.processCharCode(b'<110>'), 
                         auto_close=False
                     )
                     ui.menu_item(
                         'Auto Break Enable', 
-                        lambda: self.dataProcessor.processCharCode('FB'), 
+                        lambda: self.dataProcessor.processCharCode(b'<101>'), 
                         auto_close=False
                     )
                     ui.menu_item(
                         'Auto Break Disable', 
-                        lambda: self.dataProcessor.processCharCode('FC'), 
+                        lambda: self.dataProcessor.processCharCode(b'<102>'), 
                         auto_close=False
                     )
                     ui.separator()
 
                 ui.menu_item(
                     'Front Camera (C)', 
-                    lambda: print("VideoSelector.setSource(0)"),
+                    lambda: self.dataProcessor.processCharCode(b'<253>'),
                     auto_close=False
                 )
                 ui.menu_item(
@@ -195,10 +201,10 @@ class MainApp:
     # ========================================================================================
     def serviceRxData(self):
         while True:
-            charCode = self.comReader.popNextMessage()
-            if charCode == None:
+            actionCode = self.comReader.popNextMessage()
+            if actionCode == None:
                 return  # no data to process
-            self.dataProcessor.processCharCode(charCode)
+            self.dataProcessor.processCharCode(actionCode)
 
     # ========================================================================================
     #   Testing Ground

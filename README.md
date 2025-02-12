@@ -12,3 +12,9 @@
 - [NiceGui Docs](https://nicegui.io/documentation)
 - [Tailwind Docs](https://v2.tailwindcss.com/docs)
 - [Quasar Framework Docs](https://quasar.dev/docs)
+
+
+## To Do
+- log serial received messages
+- periodically check that arduino connection is healthy
+- 

@@ -18,11 +18,12 @@ class ComWriter():
         dataStr = ""
         txData: str = input()
         try:
-            dataBytes = bytes.fromhex(txData)
+            dataBytes = txData.encode('utf-8')
             dataStr = dataBytes.hex(' ').upper()
         except:
             print("Invalid input data.")
         else:
             # write message to serial
             self._comPort.write(dataBytes)
-            print(f"Tx Data -> {dataStr} ({self._comPort.getMessageType(dataStr)})")
+            # print(f"Tx Data -> {dataStr} ({self._comPort.getMessageType(dataStr)})")
+            print(f"Tx Data -> {txData}")

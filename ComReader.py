@@ -30,7 +30,10 @@ class ComReader():
         self._rxDataBytes = self._comPort.readSerial()
         if self._rxDataBytes == b'':
             return
-        self.__processDataBytes()
+
+        self._rxDataQueue.append(self._rxDataBytes)
+        # self.__processDataBytes()
+
         
     def __processDataBytes(self):
         rxDataStr = self._comPort.bytesToString(self._rxDataBytes) # convert data bytes to string format

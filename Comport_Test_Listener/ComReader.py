@@ -36,7 +36,8 @@ class ComReader():
         if inputBytes == b'':
             return
         inputStr = inputBytes.hex(' ').upper()
-        print(inputStr, f"({self._comPort.getMessageType(inputStr)})")
+        # print(inputStr, f"({self._comPort.getMessageType(inputStr)})")
+        print(f"Rx data <- {inputBytes.decode()}")
 
 
     def __readRaw(self):

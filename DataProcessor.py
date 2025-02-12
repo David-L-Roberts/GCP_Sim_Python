@@ -1,5 +1,6 @@
 from Logging import Log
 from nicegui import ui
+from MessageLib import ActionCodes, txMessageCodes
 import time
 
 C_HEADER_DEFAULT = "bg-[#0d1117]"
@@ -12,12 +13,12 @@ class DataProcessor:
     def __init__(self, headerRow: ui.header, distanceLabel: ui.label) -> None:
         # match action codes to service functions
         self.processorDict = {
-            "D2": self.__service_ACK,
-            "FB": self.__service_breakEnabled,
-            "FC": self.__service_breakDisabled,
-            "FA": self.__service_stopEnabled,
-            "FE": self.__service_stopDisabled,
-            "FD": self.__service_DistSensor
+            txMessageCodes[ActionCodes.INCREASE_EZ]:        self.__service_breakEnabled,
+            txMessageCodes[ActionCodes.RESET_HIGH_EZ]:      self.__service_breakDisabled,
+            txMessageCodes[ActionCodes.RESET_LOW_EZ]:       self.__service_stopEnabled,
+            txMessageCodes[ActionCodes.MANUAL]:             self.__service_stopDisabled,
+            txMessageCodes[ActionCodes.IDLE]:               self.__service_DistSensor,
+            txMessageCodes[ActionCodes.HMI_ACK]:            self.__service_ACK,
             }
         # var for holding distance sensor reading
         self.dataVal = ""
@@ -28,13 +29,21 @@ class DataProcessor:
         # flag for acknowledgement reception
         self.recACK = False
 
-    def processCharCode(self, charCode: str):
-        if type(charCode) == tuple:
-            charCode, self.dataVal = charCode
+    def processCharCode(self, charCode: bytes):
+        charCode_Str = charCode.decode()
+        # check for starting and ending chars
+        if ((charCode_Str[0] != '<') and (charCode_Str[-1] != '>')):
+            print(f"Received Message <- {charCode_Str}")
+            return
+
+        charCode_bytes = charCode[1:-1]   # strip < & >
+
+        # if type(charCode) == tuple:
+        #     charCode, self.dataVal = charCode
         try:
-            func = self.processorDict[charCode]
+            func = self.processorDict[charCode_bytes]
         except KeyError:
-            Log.log(f"Cannot process char code ({charCode}) in {DataProcessor}.", Log.WARNING)
+            Log.log(f"Cannot process char code ({charCode_bytes}) in {DataProcessor}.", Log.WARNING)
         else:
             func()
     

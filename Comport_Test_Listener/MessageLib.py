@@ -1,33 +1,42 @@
-class Directions:
-    DOWN    = "down"
-    UP      = "up"
-    LEFT    = "left"
-    RIGHT   = "right"
-    STOP    = "stop"
-
+class ActionCodes:
+    DECREASE_EZ     = "DECREASE_EZ"
+    INCREASE_EZ     = "INCREASE_EZ"
+    RESET_HIGH_EZ   = "RESET_HIGH_EZ"
+    RESET_LOW_EZ    = "RESET_LOW_EZ"
+    MANUAL          = "MANUAL"
+    IDLE            = "IDLE"
+    HMI_ACK         = "HMI_ACK"
+    HMI_HELLO       = "HMI_HELLO"
 
 # types of messages and their control characters
-txMessageCodes = {
-    Directions.UP:      b'\xE1',
-    Directions.DOWN:    b'\xE2',
-    Directions.LEFT:    b'\xE3',
-    Directions.RIGHT:   b'\xE4',
-    Directions.STOP:    b'\xE0',
-    "Hello":            b'\xD1'
+txMessageCodes: dict = {
+    ActionCodes.DECREASE_EZ:    b'100',
+    ActionCodes.INCREASE_EZ:    b'101',
+    ActionCodes.RESET_HIGH_EZ:  b'102',
+    ActionCodes.RESET_LOW_EZ:   b'103',
+    ActionCodes.MANUAL:         b'110',
+    ActionCodes.IDLE:           b'111',
+    ActionCodes.HMI_ACK:        b'253',
+    ActionCodes.HMI_HELLO:      b'254',
 }
 
 # types of control characters and their message types
-msgTypeLookup = {
-    "E1": "Forward",
-    "E2": "Backward",
-    "E3": "Turn Left",
-    "E4": "Turn Right",
-    "E0": "Stop",
-    "D1": "Hello",
-    "D2": "ACK",
-    "FB": "Auto Breaking Enabled Alert",
-    "FC": "Auto Breaking Disabled Alert",
-    "FA": "Emergency Stop Enabled Alert",
-    "FE": "Emergency Stop Disabled Alert",
-    "FD": "Distance Sensor Reading",
+msgTypeLookup: dict = {
+    b'0': "Toggle Relay-09",
+    b'1': "Toggle Relay-08",
+    b'2': "Toggle Relay-07",
+    b'3': "Toggle Relay-06",
+    b'4': "Toggle Relay-05",
+    b'5': "Toggle Relay-04",
+    b'6': "Toggle Relay-03",
+    b'7': "Toggle Relay-02",
+    b'8': "Toggle Relay-01",
+    b'100': "DECREASE_EZ",
+    b'101': "INCREASE_EZ",
+    b'102': "RESET_HIGH_EZ",
+    b'103': "RESET_LOW_EZ",
+    b'110': "MANUAL",
+    b'111': "IDLE",
+    b'253': "HMI_ACK",
+    b'254': "HMI_HELLO",
 }

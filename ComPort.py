@@ -34,10 +34,13 @@ class ComPort(serial.Serial):
 
     def writeSerial(self, messageBytes: bytes):
         """Write given bytes to serial."""
-        messageStr = self.bytesToString(messageBytes)
+        messagePacket: bytes = b'<' + messageBytes + b'>'
+
+        messageStr = messagePacket.decode()
         Log.log(f"Tx Data -> {messageStr}", Log.DEBUG)
-        Log.log(f"Tx message type: {self.getMessageType(messageStr)}", Log.DEBUG)
-        self.write(messageBytes)
+        Log.log(f"Tx message type: {self.getMessageType(messageBytes)}", Log.DEBUG)
+
+        self.write(messagePacket)
     
     def readSerial(self):
         """Attempt to read data from comport.
@@ -46,7 +49,7 @@ class ComPort(serial.Serial):
         inputByteArray: bytes = b''
         bytes_in_waiting = self.in_waiting
         if(bytes_in_waiting > 0):
-            Log.log(f"Bytes Recieved: {bytes_in_waiting}", Log.DEBUG)
+            Log.log(f"Bytes Received: {bytes_in_waiting}", Log.DEBUG)
         else: 
             return b''    # no data available for reading
         
@@ -58,10 +61,10 @@ class ComPort(serial.Serial):
     def bytesToString(self, byteData: bytes):
         return byteData.hex(" ").upper()
 
-    def getMessageType(self, controlCode: str):
+    def getMessageType(self, controlCode: bytes):
         """Return the message type of the last read message."""
         try:
-            messageType = msgTypeLookup[controlCode[:2]]
+            messageType = msgTypeLookup[controlCode]
         except:
             messageType = controlCode
             Log.log(f"Received invalid Control Code ({controlCode}).", Log.ERROR)
