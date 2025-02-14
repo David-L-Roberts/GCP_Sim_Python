@@ -38,8 +38,6 @@ class DataProcessor:
 
         charCode_bytes = charCode[1:-1]   # strip < & >
 
-        # if type(charCode) == tuple:
-        #     charCode, self.dataVal = charCode
         try:
             func = self.processorDict[charCode_bytes]
         except KeyError:
@@ -56,6 +54,10 @@ class DataProcessor:
         response = self.recACK
         self.recACK = False
         return response
+
+    
+
+    # ====================================================================
     
     def __service_breakEnabled(self):
         Log.log("Automatic Breaking ACTIVATED.")

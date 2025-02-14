@@ -33,13 +33,11 @@ class ComPort(serial.Serial):
             raise Exception("No Com ports Available!")
 
     def writeSerial(self, messageBytes: bytes):
-        """Write given bytes to serial."""
+        """Write given bytes to serial, enclosing within `<` and `>` delimiters."""
         messagePacket: bytes = b'<' + messageBytes + b'>'
 
         messageStr = messagePacket.decode()
-        Log.log(f"Tx Data -> {messageStr}", Log.DEBUG)
-        Log.log(f"Tx message type: {self.getMessageType(messageBytes)}", Log.DEBUG)
-
+        Log.log(f"Tx Data -> {messageStr} (Type: {self.getMessageType(messageBytes)})", Log.DEBUG)
         self.write(messagePacket)
     
     def readSerial(self):

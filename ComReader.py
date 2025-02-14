@@ -14,7 +14,7 @@ class ComReader():
     def __init__(self, comPort: ComPort) -> None:
         self._comPort = comPort
         self._rxDataBytes: bytes = b''
-        self._rxDataQueue: list[str] = []
+        self._rxDataQueue: list[bytes] = []
 
         self._event = Event()
         self._readThread = Thread(target=self.__threadLoop, daemon=True)
@@ -32,6 +32,8 @@ class ComReader():
             return
 
         self._rxDataQueue.append(self._rxDataBytes)
+
+        # TODO
         # self.__processDataBytes()
 
         

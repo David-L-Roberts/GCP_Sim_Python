@@ -118,39 +118,39 @@ class MainApp:
             with ui.menu() as menu:
                 if SETTINGS['Testing']:
                     ui.menu_item(
-                        'Emergency Stop Enable', 
+                        'TBD', 
                         lambda: self.dataProcessor.processCharCode(b'<103>'), 
                         auto_close=False
                     )
                     ui.menu_item(
-                        'Emergency Stop Disable', 
+                        'TBD', 
                         lambda: self.dataProcessor.processCharCode(b'<110>'), 
                         auto_close=False
                     )
                     ui.menu_item(
-                        'Auto Break Enable', 
+                        'TBD', 
                         lambda: self.dataProcessor.processCharCode(b'<101>'), 
                         auto_close=False
                     )
                     ui.menu_item(
-                        'Auto Break Disable', 
+                        'TBD', 
                         lambda: self.dataProcessor.processCharCode(b'<102>'), 
                         auto_close=False
                     )
                     ui.separator()
 
                 ui.menu_item(
-                    'Front Camera (C)', 
+                    'ACK_HELLO', 
                     lambda: self.dataProcessor.processCharCode(b'<253>'),
                     auto_close=False
                 )
                 ui.menu_item(
-                    'Back Camera (B)', 
+                    'TBD', 
                     lambda: print("VideoSelector.setSource(1)"),
                     auto_close=False
                 )
                 ui.menu_item(
-                    'Disable Camera', 
+                    'TBD', 
                     lambda: print("VideoSelector.setSource(2)"),
                     auto_close=False
                 )
@@ -169,7 +169,7 @@ class MainApp:
     #   MAIN BODY
     # ========================================================================================
     def add_main_body(self):
-        Page1MainBody()
+        Page1MainBody(comPort=self.comPort)
 
 
     # ========================================================================================
