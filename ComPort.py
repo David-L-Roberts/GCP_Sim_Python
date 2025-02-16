@@ -10,6 +10,9 @@ class ComPort(serial.Serial):
         self._open_com_port(portNum)
         self.reset_input_buffer()
         self.reset_output_buffer()
+
+        # flag to signal that next action code will be a new switching time
+        self.newSwitchTime: bool = False    
     
     def _open_com_port(self, portNum):
         """Open the Serial Com port"""
@@ -61,6 +64,10 @@ class ComPort(serial.Serial):
 
     def getMessageType(self, controlCode: bytes):
         """Return the message type of the last read message."""
+        if self.newSwitchTime:
+            self.newSwitchTime = False
+            return "New Switching time"
+
         try:
             messageType = msgTypeLookup[controlCode]
         except:

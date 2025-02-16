@@ -103,11 +103,11 @@ class MainApp:
                 # will be a similar system for updating controller status
             # clock  
             with ui.row().classes(f"basis-[{basis_clock}%] items-center justify-center gap-0 flex-row"):
-                ui.element('div').classes("basis-[25%]")
-                with ui.row().classes("basis-[75%]"):
-                    ui.icon("schedule", color="#818cf8"). \
-                        classes(f"text-3xl")
-                    self.clockLabel = ui.label("HH:MM:SS").classes(f"text-lg text-left pl-[3px] text-stone-400")
+                # ui.element('div').classes("basis-[25%]")
+                # with ui.row().classes("basis-[75%]"):
+                #     ui.icon("schedule", color="#818cf8"). \
+                #         classes(f"text-3xl")
+                self.clockLabel = ui.label("HH:MM:SS").classes(f"text-lg text-left pl-[3px] text-stone-200")
             ui.timer(1.0, self.update_time)
 
             # drop down menu    
@@ -142,7 +142,7 @@ class MainApp:
                     ui.separator()
 
                 ui.menu_item(
-                    'ACK_HELLO', 
+                    'ACK_HELLO (H)', 
                     lambda: self.dataProcessor.processCharCode(b'<253>'),
                     auto_close=False
                 )
@@ -180,16 +180,16 @@ class MainApp:
     def handle_key(self, e: KeyEventArguments):
         if (not e.action.keydown) or (e.action.repeat):
             return
-        if (e.key == 'e'):
-            print("Key Pressed: E")
-            # self.eyeTrackingEnable()
-        elif (e.key == 'd'):
-            print("Key Pressed: D")
-            # self.eyeTrackingDisable()
+        if (e.key == 'h'):
+            print("Key Pressed: H")
+            self.dataProcessor.processCharCode(b'<253>'),
         elif (e.key == 'k'):
             print("Key Pressed: K")
             Log.log("Shutting Down Application.")
             app.shutdown()
+        elif (e.key == 'd'):
+            print("Key Pressed: D")
+            # self.eyeTrackingDisable()
         elif (e.key == 'c'):
             print("Key Pressed: C") # switch to front webcam feed
             # VideoSelector.setSource(0)

@@ -54,7 +54,20 @@ class Page1MainBody:
         with ui.row().classes("items-center"):
             ui.label("Switching Speed:") \
                 .classes("text-bold text-lg")
-            ui.label("TBD (Coming Soon)")
+            ui.label("Update Switching Speed (in ms).") \
+                .classes("text-lg text-[#ffecb3]")
+            ui.label("This is the amount of time before changing to next state (next EZ value).") \
+                .classes("text-italic text-stone-200")
+            
+        with ui.row().classes("items-center"):
+            self.sliderSwitchTime = ui.slider(min=100, max=(250*4), step=10, value=500) \
+                .classes("w-96").props('color=amber-8')
+            ui.label().bind_text_from(self.sliderSwitchTime, 'value')
+            ui.label("ms")
+
+            ui.button("Update Speed", on_click=self.__buttonFunc_speedUpdate) \
+                .props('icon=send color=amber-8')
+
     
     # ========================================================================================
     #   BUTTON FUNCTIONS    
@@ -92,5 +105,9 @@ class Page1MainBody:
         pass
 
     # speedConfig
-    def __buttonFunc_speedConfig(self):
-        pass
+    def __buttonFunc_speedUpdate(self):
+        ui.notify(f"Switching speed updated to: {self.sliderSwitchTime.value} ms")
+        self.__comPort.writeSerial(txMessageCodes[ActionCodes.CHANGE_SWITCH_T])
+        self.__comPort.newSwitchTime = True
+        switchTActionCode: bytes = str(int(self.sliderSwitchTime.value / 4)).encode()   # TODO: grab '4' divider from configurable var
+        self.__comPort.writeSerial(switchTActionCode)
