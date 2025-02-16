@@ -9,7 +9,7 @@ class ActionCodes:
     HMI_HELLO       = "HMI_HELLO"
 
 # types of messages and their control characters
-txMessageCodes: dict = {
+txMessageCodes: dict[str, bytes] = {
     ActionCodes.DECREASE_EZ:    b'100',
     ActionCodes.INCREASE_EZ:    b'101',
     ActionCodes.RESET_HIGH_EZ:  b'102',
@@ -21,7 +21,7 @@ txMessageCodes: dict = {
 }
 
 # types of control characters and their message types
-msgTypeLookup: dict = {
+msgTypeLookup: dict[bytes, str] = {
     b'0': "Toggle Relay-09",
     b'1': "Toggle Relay-08",
     b'2': "Toggle Relay-07",

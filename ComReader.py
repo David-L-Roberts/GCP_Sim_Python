@@ -31,35 +31,48 @@ class ComReader():
         if self._rxDataBytes == b'':
             return
 
-        self._rxDataQueue.append(self._rxDataBytes)
-
-        # TODO
-        # self.__processDataBytes()
+        self.__processDataBytes()
 
         
     def __processDataBytes(self):
-        rxDataStr = self._comPort.bytesToString(self._rxDataBytes) # convert data bytes to string format
-        Log.log(f"Rx Data <- {rxDataStr}", Log.DEBUG)      # log received bytes
+        msg_str = self._rxDataBytes.decode()
+        # Log.log(f"Processing raw input <- {msg_str}", Log.DEBUG)
 
-        # process individual bytes:
-        splitData: list = rxDataStr.split(' ')
-        messageTypes = []
-        joinFlag = False
-        for byteCode in splitData:
-            if joinFlag:
-                # group distance sensor code with distance sensor data value into a tuple, before adding to queue
-                byteCode = (self._rxDataQueue.pop(), byteCode)
-                self._rxDataQueue.append(byteCode)
-                joinFlag = False
+        msg_list: list[bytes] = []
+        i = 0
+        j = 0   # prevent infinite loops
+        while True:
+            j += 1
+            if (i >= len(msg_str)) or (j > 250):
+                break
+                
+            char = msg_str[i]
+            if char == "<":
+                msg_part1 = msg_str[:i]
+                msg_part2 = msg_str[i:]
+
+                msg_list.append(msg_part1.encode())
+                msg_str = msg_part2
+                i = 1
                 continue
-            elif byteCode == "FD":  # flag special processing for distance sensor code
-                joinFlag = True
-            # add received bytes to data queue
-            self._rxDataQueue.append(byteCode)
-            # determine type of code received
-            messageTypes.append(self._comPort.getMessageType(byteCode))
+            elif char == ">":
+                i += 1
+                msg_part1 = msg_str[:i]
+                msg_part2 = msg_str[i:]
 
-        Log.log(f"Rx Message Type: {messageTypes}", Log.DEBUG)
+                msg_list.append(msg_part1.encode())
+                msg_str = msg_part2
+                i=0
+                continue
+
+            i += 1
+
+        if msg_str != '':
+            msg_list.append(msg_str.encode())
+
+        for msg in msg_list:
+            self._rxDataQueue.append(msg)
+
 
     def popNextMessage(self):
         """returns the oldest unread character code received from serial.

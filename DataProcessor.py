@@ -1,6 +1,6 @@
 from Logging import Log
 from nicegui import ui
-from MessageLib import ActionCodes, txMessageCodes
+from MessageLib import ActionCodes, txMessageCodes, msgTypeLookup
 import time
 
 C_HEADER_DEFAULT = "bg-[#0d1117]"
@@ -13,12 +13,12 @@ class DataProcessor:
     def __init__(self, headerRow: ui.header, distanceLabel: ui.label) -> None:
         # match action codes to service functions
         self.processorDict = {
+            txMessageCodes[ActionCodes.HMI_ACK]:            self.__service_ACK,
             txMessageCodes[ActionCodes.INCREASE_EZ]:        self.__service_breakEnabled,
             txMessageCodes[ActionCodes.RESET_HIGH_EZ]:      self.__service_breakDisabled,
             txMessageCodes[ActionCodes.RESET_LOW_EZ]:       self.__service_stopEnabled,
             txMessageCodes[ActionCodes.MANUAL]:             self.__service_stopDisabled,
-            txMessageCodes[ActionCodes.IDLE]:               self.__service_DistSensor,
-            txMessageCodes[ActionCodes.HMI_ACK]:            self.__service_ACK,
+            txMessageCodes[ActionCodes.IDLE]:               self.__service_stopDisabled,
             }
         # var for holding distance sensor reading
         self.dataVal = ""
@@ -33,7 +33,7 @@ class DataProcessor:
         charCode_Str = charCode.decode()
         # check for starting and ending chars
         if ((charCode_Str[0] != '<') and (charCode_Str[-1] != '>')):
-            print(f"Received Message <- {charCode_Str}")
+            Log.log(f"Received Message <- {charCode_Str}", Log.INFO)
             return
 
         charCode_bytes = charCode[1:-1]   # strip < & >
@@ -43,6 +43,7 @@ class DataProcessor:
         except KeyError:
             Log.log(f"Cannot process char code ({charCode_bytes}) in {DataProcessor}.", Log.WARNING)
         else:
+            Log.log(f"Received Action Code <- {msgTypeLookup[charCode_bytes]} ({charCode_bytes.decode()})", Log.INFO)
             func()
     
     def __service_ACK(self):
@@ -57,6 +58,8 @@ class DataProcessor:
 
     
 
+    # ====================================================================
+    #   LEGACY REFERENCE
     # ====================================================================
     
     def __service_breakEnabled(self):
@@ -77,17 +80,3 @@ class DataProcessor:
         ui.notify("Emergency Stop Deactivated. Movement enabled.", type='positive', position='center', progress=True, timeout=4_000)
         self.headerRow.classes(remove=C_HEADER_STOP, add=C_HEADER_DEFAULT)
     
-    def __service_DistSensor(self):
-        Log.log(f"Processing: Distance Sensor Reading - 0x{self.dataVal}", Log.DEBUG)
-        if self.dataVal == "FF":
-            # special case for max distance
-            distStr = "500+"
-        else:
-            # convert hex str to int val
-            dataInt: int = int.from_bytes(bytes.fromhex(self.dataVal), byteorder='big')
-            # convert Int to distance (in cm)
-            distanceFloat: float = round(dataInt*CONV_FACT, 1)
-            # convert to string
-            distStr: str = str(distanceFloat)
-
-        self.distlabel.set_text(f"{distStr} cm")

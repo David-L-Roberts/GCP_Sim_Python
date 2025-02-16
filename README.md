@@ -4,7 +4,6 @@
 
 ## Requirements
 - `pip install nicegui`
-- `pip install numpy`
 - `pip install pywebview`
 - `pip install pyserial`
 
@@ -15,6 +14,16 @@
 
 
 ## To Do
-- log serial received messages
+- log serial received messages (non code messages)
+- switching speed
+  - Fixed time
+  - Distance and Speed
+- Dynamic Speed control
+  - Fit equation to curve and adjust accordingly
+  - OR, Fixed / manual segments with different speeds
 - periodically check that arduino connection is healthy
-- 
+- Manual Switching control
+
+- Read test cases from json file
+
+- Convert to .exe

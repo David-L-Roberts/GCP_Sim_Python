@@ -29,13 +29,15 @@ class MainApp:
             timeout=SETTINGS["ReadTimeoutSec"]
         )
 
+        self.comPort.reset_input_buffer()
+
         # Handle data received from serial 
         self.comReader = ComReader(self.comPort)
         ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
         # page header
-        with ui.row().classes("w-full relative"):
-            self.add_header()
+        # with ui.row().classes("w-full relative"):
+        self.add_header()
         # page body
         with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-14 py-1"):
             self.add_main_body()
