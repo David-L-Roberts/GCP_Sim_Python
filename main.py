@@ -33,7 +33,6 @@ class MainApp:
 
         # Handle data received from serial 
         self.comReader = ComReader(self.comPort)
-        ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
         # page header
         # with ui.row().classes("w-full relative"):
@@ -48,6 +47,7 @@ class MainApp:
         self.keyboard = ui.keyboard(on_key=self.handle_key)
 
         self.timerCheckComsHealth = ui.timer(5.0, self.startup_transaction)
+        self.timerReadSerial = ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
 
     def startup_transaction(self):

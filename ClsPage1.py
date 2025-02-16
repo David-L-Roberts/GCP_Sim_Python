@@ -3,6 +3,8 @@ from ComPort import ComPort
 from MessageLib import ActionCodes, txMessageCodes
 from StyleSettings import *
 
+SWITCH_T_MULT = 4
+
 class Page1MainBody:
     def __init__(self, comPort: ComPort):
         self.__comPort: ComPort = comPort
@@ -60,7 +62,7 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=100, max=(250*4), step=10, value=500) \
+            self.sliderSwitchTime = ui.slider(min=200, max=(250*SWITCH_T_MULT), step=10, value=500) \
                 .classes("w-96").props('color=amber-8')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
             ui.label("ms")
@@ -109,5 +111,5 @@ class Page1MainBody:
         ui.notify(f"Switching speed updated to: {self.sliderSwitchTime.value} ms")
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.CHANGE_SWITCH_T])
         self.__comPort.newSwitchTime = True
-        switchTActionCode: bytes = str(int(self.sliderSwitchTime.value / 4)).encode()   # TODO: grab '4' divider from configurable var
+        switchTActionCode: bytes = str(int(self.sliderSwitchTime.value / SWITCH_T_MULT)).encode()
         self.__comPort.writeSerial(switchTActionCode)
