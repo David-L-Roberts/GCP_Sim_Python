@@ -14,7 +14,13 @@
 
 
 ## To Do
-- log serial received messages (non code messages)
+- Change switching on Microcontroller to lockout relays if they need to swtich too fast (<200ms)
+- Send state number
+- Eliminate bad states
+- Get EZ for each state
+- find out function mapped to EZ curve
+
+
 - switching speed
   - Fixed time
   - Distance and Speed

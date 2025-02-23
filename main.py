@@ -51,11 +51,7 @@ class MainApp:
 
 
     def startup_transaction(self):
-        Log.log("Attempting to establish connection to Arduino.")
-
-        msg: bytes = txMessageCodes[ActionCodes.HMI_HELLO]
-        self.comPort.writeSerial(msg)
-
+        
         if self.dataProcessor.checkACK():
             Log.log("Arduino connected successfully.")
             self.indLabelEnable.classes(replace=self.style_indLabel_connect)
@@ -64,6 +60,12 @@ class MainApp:
             self.timerCheckComsHealth.deactivate()
             ui.notify("Arduino connected successfully", type='positive', position='center', progress=True, timeout=3_000)
             return 
+        
+        else:
+            Log.log("Attempting to establish connection to Arduino.")
+
+            msg: bytes = txMessageCodes[ActionCodes.HMI_HELLO]
+            self.comPort.writeSerial(msg)
             
 
     # ========================================================================================
