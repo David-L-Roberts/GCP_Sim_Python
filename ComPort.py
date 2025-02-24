@@ -13,6 +13,8 @@ class ComPort(serial.Serial):
 
         # flag to signal that next action code will be a new switching time
         self.newSwitchTime: bool = False    
+        # flag to signal that next action code will be a new system state number
+        self.newSysState: bool = False    
     
     def _open_com_port(self, portNum):
         """Open the Serial Com port"""
@@ -67,6 +69,9 @@ class ComPort(serial.Serial):
         if self.newSwitchTime:
             self.newSwitchTime = False
             return "New Switching time"
+        elif self.newSysState:
+            self.newSysState = False
+            return "New System state"
 
         try:
             messageType = msgTypeLookup[controlCode]

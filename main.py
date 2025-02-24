@@ -121,21 +121,21 @@ class MainApp:
         with ui.button(icon='menu', color="indigo-500"):
             with ui.menu() as menu:
                 if SETTINGS['Testing']:
-                    ui.menu_item(
-                        'TBD', 
-                        lambda: self.dataProcessor.processCharCode(b'<103>'), 
-                        auto_close=False
-                    )
-                    ui.menu_item(
-                        'TBD', 
-                        lambda: self.dataProcessor.processCharCode(b'<110>'), 
-                        auto_close=False
-                    )
-                    ui.menu_item(
-                        'TBD', 
-                        lambda: self.dataProcessor.processCharCode(b'<101>'), 
-                        auto_close=False
-                    )
+                    # ui.menu_item(
+                    #     'TBD', 
+                    #     lambda: self.dataProcessor.processCharCode(b'<103>'), 
+                    #     auto_close=False
+                    # )
+                    # ui.menu_item(
+                    #     'TBD', 
+                    #     lambda: self.dataProcessor.processCharCode(b'<110>'), 
+                    #     auto_close=False
+                    # )
+                    # ui.menu_item(
+                    #     'TBD', 
+                    #     lambda: self.dataProcessor.processCharCode(b'<101>'), 
+                    #     auto_close=False
+                    # )
                     ui.menu_item(
                         'TBD', 
                         lambda: self.dataProcessor.processCharCode(b'<102>'), 

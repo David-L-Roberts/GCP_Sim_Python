@@ -4,6 +4,7 @@ from MessageLib import ActionCodes, txMessageCodes
 from StyleSettings import *
 
 SWITCH_T_MULT = 4
+MAX_STATE = 305
 
 class Page1MainBody:
     def __init__(self, comPort: ComPort):
@@ -50,7 +51,25 @@ class Page1MainBody:
         with ui.row().classes("items-center"):
             ui.label("Manual Controls:") \
                 .classes("text-bold text-lg")
-            ui.label("TBD (Coming Soon)")
+            ui.label("Set system state.") \
+                .classes("text-lg text-[#f48fb1]")
+            ui.label("Manualy jump system to a specific state.") \
+                .classes("text-italic text-stone-200")
+            
+        with ui.row().classes("items-center"):
+            self.sliderSystemState = ui.slider(min=0, max=MAX_STATE, step=1, value=0) \
+                .classes("w-[34rem]").props('color=pink-8 label')
+            ui.label().bind_text_from(self.sliderSystemState, 'value')
+            ui.label(f"/ {MAX_STATE}")
+            ui.button("Update State", on_click=self.__buttonFunc_setState) \
+                .props('icon=send color=pink-8')
+            
+        with ui.row().classes("items-center"):
+            ui.button("Dec", on_click=self.__buttonFunc_decreaseState) \
+                .props('icon=keyboard_arrow_left color=pink-9')
+            ui.button("Inc", on_click=self.__buttonFunc_increaseState) \
+                .props('icon=keyboard_arrow_right color=pink-9')
+            
     
     def __add_controls_speedConfig(self):
         with ui.row().classes("items-center"):
@@ -62,11 +81,10 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=200, max=(250*SWITCH_T_MULT), step=10, value=500) \
-                .classes("w-96").props('color=amber-8')
+            self.sliderSwitchTime = ui.slider(min=100, max=(250*SWITCH_T_MULT), step=25, value=500) \
+                .classes("w-[34rem]").props('color=amber-8')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
             ui.label("ms")
-
             ui.button("Update Speed", on_click=self.__buttonFunc_speedUpdate) \
                 .props('icon=send color=amber-8')
 
@@ -103,9 +121,21 @@ class Page1MainBody:
         ui.notify('Set EZ=0')
 
     # manual
-    def __buttonFunc_manual(self):
-        pass
-
+    def __buttonFunc_setState(self):
+        ui.notify(f"System state forced to: #{self.sliderSystemState.value}")
+        self.__comPort.writeSerial(txMessageCodes[ActionCodes.SET_STATE])
+        self.__comPort.newSysState = True
+        setStateActionCode: bytes = str(self.sliderSystemState.value).encode()
+        self.__comPort.writeSerial(setStateActionCode)
+    
+    def __buttonFunc_increaseState(self):
+        if self.sliderSystemState.value < MAX_STATE:
+            self.sliderSystemState.value += 1
+    
+    def __buttonFunc_decreaseState(self):
+        if self.sliderSystemState.value > 0:
+            self.sliderSystemState.value -= 1
+        
     # speedConfig
     def __buttonFunc_speedUpdate(self):
         ui.notify(f"Switching speed updated to: {self.sliderSwitchTime.value} ms")

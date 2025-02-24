@@ -1,2 +1,1 @@
-myStr = "123"
-myBytes = b'123'
+x = 5

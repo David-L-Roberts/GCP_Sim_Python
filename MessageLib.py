@@ -5,6 +5,7 @@ class ActionCodes:
     RESET_LOW_EZ    = "RESET_LOW_EZ"
     MANUAL          = "MANUAL"
     IDLE            = "IDLE"
+    SET_STATE       = "SET_STATE"
     HMI_ACK         = "HMI_ACK"
     HMI_HELLO       = "HMI_HELLO"
     CHANGE_SWITCH_T = "CHANGE_SWITCH_T"
@@ -18,6 +19,7 @@ txMessageCodes: dict[str, bytes] = {
     ActionCodes.MANUAL:             b'110',
     ActionCodes.IDLE:               b'111',
     ActionCodes.CHANGE_SWITCH_T:    b'200',
+    ActionCodes.SET_STATE:          b'240',
     ActionCodes.HMI_ACK:            b'253',
     ActionCodes.HMI_HELLO:          b'254',
 }
@@ -40,6 +42,7 @@ msgTypeLookup: dict[bytes, str] = {
     b'110': "MANUAL",
     b'111': "IDLE",
     b'200': "CHANGE_SWITCH_T",
+    b'240': "SET_STATE",
     b'253': "HMI_ACK",
     b'254': "HMI_HELLO",
 }
