@@ -81,8 +81,8 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=100, max=(250*SWITCH_T_MULT), step=25, value=500) \
-                .classes("w-[34rem]").props('color=amber-8')
+            self.sliderSwitchTime = ui.slider(min=50, max=(250*SWITCH_T_MULT), step=5, value=200) \
+                .classes("w-[34rem]").props('color=amber-8 label')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
             ui.label("ms")
             ui.button("Update Speed", on_click=self.__buttonFunc_speedUpdate) \
