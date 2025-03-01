@@ -4,7 +4,7 @@ from MessageLib import ActionCodes, txMessageCodes
 from StyleSettings import *
 
 SWITCH_T_MULT = 4
-MAX_STATE = 305
+MAX_STATE = 299
 
 class Page1MainBody:
     def __init__(self, comPort: ComPort):

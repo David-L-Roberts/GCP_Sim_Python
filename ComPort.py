@@ -1,5 +1,6 @@
 import serial.tools.list_ports as port_list
 import serial
+import time
 from Logging import Log
 from MessageLib import msgTypeLookup
 
@@ -58,6 +59,18 @@ class ComPort(serial.Serial):
         
         while(self.in_waiting > 0):
             inputByteArray += self.read()
+        
+        flagReadCheck = False
+        while(True):
+            if (self.in_waiting > 0):
+                inputByteArray += self.read()
+                flagReadCheck = False
+            else:
+                if flagReadCheck == False:
+                    time.sleep(0.05)
+                    flagReadCheck = True
+                else:
+                    break
 
         return inputByteArray    # data succesfully read
 
