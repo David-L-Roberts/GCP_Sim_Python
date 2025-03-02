@@ -46,6 +46,8 @@ class MainApp:
         # add key bindings
         self.keyboard = ui.keyboard(on_key=self.handle_key)
 
+        # start Async timers
+        time.sleep(1.0)
         self.timerCheckComsHealth = ui.timer(5.0, self.startup_transaction)
         self.timerReadSerial = ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
@@ -160,7 +162,7 @@ class MainApp:
                 )
                 ui.separator()
                 
-                ui.menu_item('Terminate Application (K)', lambda: app.shutdown())
+                ui.menu_item('Terminate Application (K)', self.app_shutdown)
                 ui.separator()
                 
                 ui.menu_item('Close', on_click=menu.close)
@@ -187,8 +189,7 @@ class MainApp:
             self.dataProcessor.processCharCode(b'<253>'),
         elif (e.key == 'k'):
             print("Key Pressed: K")
-            Log.log("Shutting Down Application.")
-            app.shutdown()
+            self.app_shutdown()
         elif (e.key == 'd'):
             print("Key Pressed: D")
             # self.eyeTrackingDisable()
@@ -242,7 +243,14 @@ class MainApp:
         # with ui.element('div').classes('flex flex-row text-lg flex-nowrap w-full h-full absolute'):
         with ui.element('div'):
             ui.link('show page with fancy layout', page_layout)
-            
+    
+    # ========================================================================================
+    #   System Shutdown
+    # ========================================================================================
+    def app_shutdown(self):
+        ui.notify("System is shutting down.", type='negative', position='center', progress=False, close_button="OK", timeout=10_000)
+        Log.log("Shutting Down Application.")
+        app.shutdown()
 
 
 # =====================================

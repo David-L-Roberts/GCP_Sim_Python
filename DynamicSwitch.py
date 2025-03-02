@@ -20,7 +20,7 @@ class DynamicSwitch:
     
     def calcBaseStepTime(self, fullTime: int) -> int:
         '''
-        Returns the base step time for a given full switching time.
+        Returns the base step time for a given full switching time, in milliseconds.
         '''
         dynamicCoeff: float = 0
         for stateNum in range(0, self.max_state+1):
@@ -49,34 +49,3 @@ class DynamicSwitch:
         timeAdjustNorm: float = 7*math.pow(10, -6)*math.pow(stateNum, 2) - 0.0055*stateNum + 1.02
         return timeAdjustNorm
 
-
-def main():
-    pass
-    # test01()
-    test02()
-
-
-def test01():
-    dynamicCalc = DynamicSwitch()
-    
-    baseTime = 450
-
-    fullTimeMs = dynamicCalc.calcFullTime(baseTime)
-    print("Full Time:", fullTimeMs/1000, "sec")
-
-    baseTimeMs = dynamicCalc.calcBaseStepTime(fullTimeMs)
-    print("step Time:", baseTimeMs, "ms")
-
-def test02():
-    dynamicCalc = DynamicSwitch()
-    
-    fullTimeMs = 360_000
-
-    baseTimeMs = dynamicCalc.calcBaseStepTime(fullTimeMs)
-    print("step Time:", baseTimeMs, "ms")
-
-    fullTimeMs = dynamicCalc.calcFullTime(baseTimeMs)
-    print("Full Time:", fullTimeMs/1000, "sec")
-
-
-main()

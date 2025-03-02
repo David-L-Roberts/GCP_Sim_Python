@@ -2,13 +2,19 @@ from nicegui import ui
 from ComPort import ComPort
 from MessageLib import ActionCodes, txMessageCodes
 from StyleSettings import *
+from Utils import SETTINGS
+from DynamicSwitch import DynamicSwitch
 
-SWITCH_T_MULT = 4
-MAX_STATE = 299
 
 class Page1MainBody:
     def __init__(self, comPort: ComPort):
         self.__comPort: ComPort = comPort
+        self.__dynamSwitch: DynamicSwitch = DynamicSwitch()
+
+        self.switch_t_mult = SETTINGS["SWITCH_T_MULT"]
+        self.max_state = SETTINGS["MAX_STATE"]
+        self.approach_t_min_sec = int(SETTINGS["APPROACH_T_MIN_MS"]/1000)
+        self.approach_t_max_sec = int(SETTINGS["APPROACH_T_MAX_MS"]/1000)
 
         with ui.column().classes(f'{C_MAIN_BODY_2} px-20 py-8 mx-5 my-2 space-y-4'):
             self.__add_controls_decreaseEZ()
@@ -57,10 +63,10 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSystemState = ui.slider(min=0, max=MAX_STATE, step=1, value=0) \
+            self.sliderSystemState = ui.slider(min=0, max=self.max_state, step=1, value=0) \
                 .classes("w-[34rem]").props('color=pink-8 label')
             ui.label().bind_text_from(self.sliderSystemState, 'value')
-            ui.label(f"/ {MAX_STATE}")
+            ui.label(f"/ {self.max_state}")
             ui.button("Update State", on_click=self.__buttonFunc_setState) \
                 .props('icon=send color=pink-8')
             
@@ -75,18 +81,24 @@ class Page1MainBody:
         with ui.row().classes("items-center"):
             ui.label("Switching Speed:") \
                 .classes("text-bold text-lg")
-            ui.label("Update Switching Speed (in ms).") \
+            ui.label("Update the total approach / departure time (in seconds).") \
                 .classes("text-lg text-[#ffecb3]")
-            ui.label("This is the amount of time before changing to next state (next EZ value).") \
+            ui.label("This is the amount of time it takes for system to go from EZ=100 to EZ=0.") \
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=50, max=(250*SWITCH_T_MULT), step=5, value=200) \
+            self.sliderSwitchTime = ui.slider(min=self.approach_t_min_sec, max=self.approach_t_max_sec, step=1, value=120) \
                 .classes("w-[34rem]").props('color=amber-8 label')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
-            ui.label("ms")
+            ui.label("sec")
             ui.button("Update Speed", on_click=self.__buttonFunc_speedUpdate) \
                 .props('icon=send color=amber-8')
+        
+        with ui.row().classes("items-center"):
+            ui.button("Dec", on_click=self.__buttonFunc_decreaseSwitchTime) \
+                .props('icon=keyboard_arrow_left color=amber-9')
+            ui.button("Inc", on_click=self.__buttonFunc_increaseSwitchTime) \
+                .props('icon=keyboard_arrow_right color=amber-9')
 
     
     # ========================================================================================
@@ -129,7 +141,7 @@ class Page1MainBody:
         self.__comPort.writeSerial(setStateActionCode)
     
     def __buttonFunc_increaseState(self):
-        if self.sliderSystemState.value < MAX_STATE:
+        if self.sliderSystemState.value < self.max_state:
             self.sliderSystemState.value += 1
     
     def __buttonFunc_decreaseState(self):
@@ -138,8 +150,19 @@ class Page1MainBody:
         
     # speedConfig
     def __buttonFunc_speedUpdate(self):
-        ui.notify(f"Switching speed updated to: {self.sliderSwitchTime.value} ms")
+        ui.notify(f"Approach time updated to: {self.sliderSwitchTime.value} sec")
+
+        baseStepPeriodMs: int = self.__dynamSwitch.calcBaseStepTime(fullTime=self.sliderSwitchTime.value)
+
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.CHANGE_SWITCH_T])
         self.__comPort.newSwitchTime = True
-        switchTActionCode: bytes = str(int(self.sliderSwitchTime.value / SWITCH_T_MULT)).encode()
+        switchTActionCode: bytes = str(int(baseStepPeriodMs / self.switch_t_mult)).encode()
         self.__comPort.writeSerial(switchTActionCode)
+
+    def __buttonFunc_increaseSwitchTime(self):
+        if self.sliderSwitchTime.value < self.approach_t_max_sec:
+            self.sliderSwitchTime.value += 1
+    
+    def __buttonFunc_decreaseSwitchTime(self):
+        if self.sliderSwitchTime.value > self.approach_t_min_sec:
+            self.sliderSwitchTime.value -= 1
