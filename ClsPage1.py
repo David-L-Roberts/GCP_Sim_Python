@@ -152,7 +152,8 @@ class Page1MainBody:
     def __buttonFunc_speedUpdate(self):
         ui.notify(f"Approach time updated to: {self.sliderSwitchTime.value} sec")
 
-        baseStepPeriodMs: int = self.__dynamSwitch.calcBaseStepTime(fullTime=self.sliderSwitchTime.value)
+        baseStepPeriodMs: int = self.__dynamSwitch.calcBaseStepTime(fullTime=self.sliderSwitchTime.value*1_000)
+        print(baseStepPeriodMs)
 
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.CHANGE_SWITCH_T])
         self.__comPort.newSwitchTime = True
