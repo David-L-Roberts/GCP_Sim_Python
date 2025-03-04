@@ -53,13 +53,13 @@ class DynamicSwitch:
 def main():
     pass
     test01()
-    # test02()
+    test02()
 
 
 def test01():
     dynamicCalc = DynamicSwitch()
     
-    baseTime = 76*2
+    baseTime = 25
 
     fullTimeMs = dynamicCalc.calcFullTime(baseTime)
     print("Full Time:", fullTimeMs/1000, "sec")
@@ -70,7 +70,7 @@ def test01():
 def test02():
     dynamicCalc = DynamicSwitch()
     
-    fullTimeMs = 120_000
+    fullTimeMs = 25_000
 
     baseTimeMs = dynamicCalc.calcBaseStepTime(fullTimeMs)
     print("step Time:", baseTimeMs, "ms")
