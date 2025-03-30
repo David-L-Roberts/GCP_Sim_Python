@@ -14,6 +14,7 @@ from Logging import Log
 from ClsPage1 import Page1MainBody
 from StyleSettings import *
 
+DEBUG = True
 COMS_READ_INTERVAL = 1.0
 
 class MainApp:
@@ -38,7 +39,7 @@ class MainApp:
         # with ui.row().classes("w-full relative"):
         self.add_header()
         # page body
-        with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-14 py-1"):
+        with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-2 py-2"):
             self.add_main_body()
 
         # object for processing received serial data
@@ -50,6 +51,9 @@ class MainApp:
         time.sleep(1.0)
         self.timerCheckComsHealth = ui.timer(5.0, self.startup_transaction)
         self.timerReadSerial = ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
+
+        if DEBUG:
+            self.dataProcessor.processCharCode(b'<253>')
 
 
     def startup_transaction(self):
