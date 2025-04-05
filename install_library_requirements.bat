@@ -25,6 +25,6 @@ echo Installing libraries from requirements.txt...
 pip install -r requirements.txt
 
 echo.
-echo ✅ Done! All libraries from requirements.txt have been installed.
+echo Done! All libraries from requirements.txt have been installed.
 pause
 endlocal

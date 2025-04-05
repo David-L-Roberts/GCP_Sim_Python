@@ -1,6 +1,7 @@
 from nicegui import ui, app
 from nicegui.events import KeyEventArguments
 import time
+import sys
 from datetime import datetime
 
 from DataProcessor import DataProcessor
@@ -16,9 +17,6 @@ from StyleSettings import *
 
 DEBUG = True
 COMS_READ_INTERVAL = 1.0
-
-import sys
-print(sys.executable)
 
 class MainApp:
     """ Class for running main application """
@@ -279,5 +277,6 @@ def main():
     )
 
 if __name__ in {"__main__", "__mp_main__"}:
+    print("Python used:", sys.executable)
     main()
 
