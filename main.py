@@ -17,6 +17,9 @@ from StyleSettings import *
 DEBUG = True
 COMS_READ_INTERVAL = 1.0
 
+import sys
+print(sys.executable)
+
 class MainApp:
     """ Class for running main application """
     def __init__(self) -> None:
@@ -48,7 +51,7 @@ class MainApp:
         self.keyboard = ui.keyboard(on_key=self.handle_key)
 
         # start Async timers
-        time.sleep(1.0)
+        time.sleep(2.0)
         self.timerCheckComsHealth = ui.timer(5.0, self.startup_transaction)
         self.timerReadSerial = ui.timer(COMS_READ_INTERVAL, self.serviceRxData)
 
