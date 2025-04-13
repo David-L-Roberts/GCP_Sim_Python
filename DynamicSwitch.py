@@ -6,19 +6,19 @@ class DynamicSwitch:
         self.switch_base_mult = SETTINGS["SWITCH_BASE_MULT"]
         self.max_state = SETTINGS["MAX_STATE"]
     
-    def calcFullTime(self, baseTime: int) -> int:
+    def calcFullTime(self, baseTime_ms: int) -> int:
         '''
         Returns the full system switching time (from EZ=100 -> EZ=0).
         Full switching time is in milliseconds.
         '''
-        fullTime = 0
+        fullTime_ms = 0
         for stateNum in range(0, self.max_state+1):
-            fullTime += self.__getTimePerState(stateNum, baseTime)
+            fullTime_ms += self.getTimePerState(stateNum, baseTime_ms)
         
-        return fullTime
+        return fullTime_ms
     
     
-    def calcBaseStepTime(self, fullTime: int) -> int:
+    def calcBaseStepTime(self, fullTime_ms: int) -> int:
         '''
         Returns the base step time for a given full switching time, in milliseconds.
         '''
@@ -26,10 +26,10 @@ class DynamicSwitch:
         for stateNum in range(0, self.max_state+1):
             dynamicCoeff += self.__dynamFuncNormalised(stateNum) * self.switch_base_mult + 1
 
-        baseTime: int = math.ceil(fullTime / dynamicCoeff)
-        return baseTime
+        baseTime_ms: int = math.ceil(fullTime_ms / dynamicCoeff)
+        return baseTime_ms
 
-    def __getTimePerState(self, stateNum: int, baseTime: int) -> int:
+    def getTimePerState(self, stateNum: int, baseTime: int) -> int:
         '''
         Returns total time spent in a given state number, including the time adjustment. 
         Time is in ms.

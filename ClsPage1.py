@@ -3,13 +3,13 @@ from ComPort import ComPort
 from MessageLib import ActionCodes, txMessageCodes
 from StyleSettings import *
 from Utils import SETTINGS
-from DynamicSwitch import DynamicSwitch
-
+from SystemState import SystemMode, SystemTimes
 
 class Page1MainBody:
-    def __init__(self, comPort: ComPort):
+    def __init__(self, comPort: ComPort, systemTime: SystemTimes, systemMode: SystemMode):
         self.__comPort: ComPort = comPort
-        self.__dynamSwitch: DynamicSwitch = DynamicSwitch()
+        self.__systemTime: SystemTimes = systemTime
+        self.__systemMode: SystemMode = systemMode
 
         self.switch_t_mult = SETTINGS["SWITCH_T_MULT"]
         self.max_state = SETTINGS["MAX_STATE"]
@@ -20,7 +20,11 @@ class Page1MainBody:
             self.__add_controls_decreaseEZ()
             self.__add_controls_increaseEZ()
             self.__add_controls_resetEZ()
+
+        with ui.column().classes(f'{C_MAIN_BODY_2} px-8 py-6 mx-2 my-2 space-y-4'):
             self.__add_controls_manual()
+            
+        with ui.column().classes(f'{C_MAIN_BODY_2} px-8 py-6 mx-2 my-2 space-y-4'):
             self.__add_controls_speedConfig()
 
     # ========================================================================================
@@ -113,19 +117,19 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.inputTrainSpeed = ui.input(label='Train Speed (km/h)', placeholder=f'{self.approach_t_min_sec} - {self.approach_t_max_sec}',
-                on_change=self.__calcSwitchSpeedFromDistSpeed,
+            self.inputTrainSpeed = ui.input(label='Train Speed (km/h)', placeholder=f'{SETTINGS["MIN_SPEED"]} - {SETTINGS["MAX_SPEED"]}',
+                on_change=self.__calcFullTimeSec_FromDistSpeed,
                 validation= {
-                    'Speed too Low': lambda value: (int(value)) >= 10,
-                    'Speed too High': lambda value: (int(value)) <= 300,
+                    'Speed too Low': lambda value: (int(value)) >= SETTINGS["MIN_SPEED"],
+                    'Speed too High': lambda value: (int(value)) <= SETTINGS["MAX_SPEED"],
                 }
             ).classes("w-[14rem]")
 
-            self.inputTrainDistance = ui.input(label='Approach Distance (meters)', placeholder=f'{self.approach_t_min_sec} - {self.approach_t_max_sec}',
-                on_change=self.__calcSwitchSpeedFromDistSpeed,
+            self.inputTrainDistance = ui.input(label='Approach Distance (meters)', placeholder=f'{SETTINGS["MIN_DIST"]} - {SETTINGS["MAX_DIST"]}',
+                on_change=self.__calcFullTimeSec_FromDistSpeed,
                 validation= {
-                    'Distance too Low': lambda value: (int(value)) >= 100,
-                    'Distance too High': lambda value: (int(value)) <= 2_800,
+                    'Distance too Low': lambda value: (int(value)) >= SETTINGS["MIN_DIST"],
+                    'Distance too High': lambda value: (int(value)) <= SETTINGS["MAX_DIST"],
                 }
             ).classes("w-[14rem]")
 
@@ -135,7 +139,6 @@ class Page1MainBody:
                 .props('icon=send color=amber-8')
             self.labelSent_SwitchSpeed_2 = ui.label()
 
-    
     # ========================================================================================
     #   BUTTON FUNCTIONS    
     # ========================================================================================
@@ -143,34 +146,41 @@ class Page1MainBody:
     # decreaseEZ
     def __buttonFunc_startApproach(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.DECREASE_EZ])
-        ui.notify('Train Approaching')
+        self.__systemMode.set_activeMode(ActionCodes.DECREASE_EZ)
+        ui.notify('Train Approaching', position="top", type="info")
     
     def __buttonFunc_pauseApproach(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.IDLE])
-        ui.notify('Approach Paused')
+        self.__systemMode.set_activeMode(ActionCodes.IDLE)
+        ui.notify('Approach Paused', position="top", type="info")
 
     # increaseEZ
     def __buttonFunc_startDeparture(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.INCREASE_EZ])
-        ui.notify('Train Departing')
+        self.__systemMode.set_activeMode(ActionCodes.INCREASE_EZ)
+        ui.notify('Train Departing', position="top", type="info")
     
     def __buttonFunc_pauseDeparture(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.IDLE])
-        ui.notify('Depature Paused')
+        self.__systemMode.set_activeMode(ActionCodes.IDLE)
+        ui.notify('Depature Paused', position="top", type="info")
 
     # resetEZ
     def __buttonFunc_resetEZHigh(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_HIGH_EZ])
-        ui.notify('Set EZ=100')
+        self.__systemMode.set_activeMode(ActionCodes.RESET_HIGH_EZ)
+        ui.notify('Set EZ=100', position="top", type="info")
     
     def __buttonFunc_resetEZLow(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_LOW_EZ])
-        ui.notify('Set EZ=0')
+        self.__systemMode.set_activeMode(ActionCodes.RESET_LOW_EZ)
+        ui.notify('Set EZ=0', position="top", type="info")
 
     # manual
     def __buttonFunc_setState(self):
-        ui.notify(f"System state forced to: #{self.sliderSystemState.value}")
+        ui.notify(f"System state forced to: #{self.sliderSystemState.value}", position="top", type="info")   # <----------------------------- TODO
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.SET_STATE])
+        self.__systemMode.set_activeMode(ActionCodes.MANUAL)
         self.__comPort.newSysState = True
         setStateActionCode: bytes = str(self.sliderSystemState.value).encode()
         self.__comPort.writeSerial(setStateActionCode)
@@ -185,29 +195,20 @@ class Page1MainBody:
         
     # speedConfig
     def __speedUpdate_main(self):
-        ui.notify(f"Approach time updated to: {self.sliderSwitchTime.value} sec")
+        ui.notify(f"Approach time updated to: {self.sliderSwitchTime.value} sec", position="top", type="info")
 
-        baseStepPeriodMs: int = self.__dynamSwitch.calcBaseStepTime(fullTime=self.sliderSwitchTime.value*1_000)
-        print(baseStepPeriodMs)
-
-        self.__comPort.writeSerial(txMessageCodes[ActionCodes.CHANGE_SWITCH_T])
-        self.__comPort.newSwitchTime = True
-        switchTActionCode: bytes = str(int(baseStepPeriodMs / self.switch_t_mult)).encode()
-        self.__comPort.writeSerial(switchTActionCode)
-
+        self.__systemTime.set_speed_fromFullTime_ms(fullTime_ms=self.sliderSwitchTime.value*1_000)
+        self.__systemTime.sendNewSwitchingTime()
 
     def __buttonFunc_speedUpdate_1(self):
         self.__speedUpdate_main()
         self.labelSent_SwitchSpeed_1.set_text("Update Sent")
         self.labelSent_SwitchSpeed_2.set_text("")
 
-
     def __buttonFunc_speedUpdate_2(self):
         self.__speedUpdate_main()
         self.labelSent_SwitchSpeed_2.set_text("Update Sent")
         self.labelSent_SwitchSpeed_1.set_text("")
-
-
 
     def __buttonFunc_increaseSwitchTime(self):
         if self.sliderSwitchTime.value < self.approach_t_max_sec:
@@ -217,7 +218,7 @@ class Page1MainBody:
         if self.sliderSwitchTime.value > self.approach_t_min_sec:
             self.sliderSwitchTime.value -= 1
 
-    def __calcSwitchSpeedFromDistSpeed(self, x):
+    def __calcFullTimeSec_FromDistSpeed(self, x):
         try:
             distance = int(self.inputTrainDistance.value)
             speed_kmph = int(self.inputTrainSpeed.value)

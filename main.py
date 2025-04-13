@@ -7,12 +7,15 @@ from datetime import datetime
 from DataProcessor import DataProcessor
 from ComReader import ComReader
 from ComPort import ComPort
+from SystemState import SystemMode, SystemTimes
 
 from MessageLib import ActionCodes, txMessageCodes
 from Utils import SETTINGS
 from Logging import Log
 
 from ClsPage1 import Page1MainBody
+from ClsFooter import clsFooter
+from ClsTimeProgressThread import TimeProgressThread
 from StyleSettings import *
 
 DEBUG = True
@@ -36,12 +39,18 @@ class MainApp:
         # Handle data received from serial 
         self.comReader = ComReader(self.comPort)
 
+        self.systemTime: SystemTimes = SystemTimes(comPort=self.comPort)
+        self.systemMode: SystemMode = SystemMode()
+        self.timeProgressThread = TimeProgressThread(systemTime=self.systemTime, systemMode=self.systemMode)
+
         # page header
-        # with ui.row().classes("w-full relative"):
         self.add_header()
         # page body
         with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-2 py-2"):
             self.add_main_body()
+        # page footer
+        with ui.footer().classes(f'{C_FOOTER_DEFAULT} flex flex-row justify-between p-[10px] text-lg text-gray-400'):
+            self.add_footer()
 
         # object for processing received serial data
         self.dataProcessor = DataProcessor(self.headerRow, self.clockLabel)
@@ -177,10 +186,21 @@ class MainApp:
 
     
     # ========================================================================================
-    #   MAIN BODY
+    #   Page Elements
     # ========================================================================================
     def add_main_body(self):
-        Page1MainBody(comPort=self.comPort)
+        Page1MainBody(
+            comPort=self.comPort, 
+            systemTime=self.systemTime, 
+            systemMode=self.systemMode,
+        )
+    
+    def add_footer(self):
+        clsFooter(
+            systemTime=self.systemTime, 
+            systemMode=self.systemMode, 
+            timeProgressThread=self.timeProgressThread 
+        )
 
 
     # ========================================================================================
