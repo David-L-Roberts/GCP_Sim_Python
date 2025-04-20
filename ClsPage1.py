@@ -91,7 +91,7 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=self.approach_t_min_sec, max=self.approach_t_max_sec, step=1, value=120) \
+            self.sliderSwitchTime = ui.slider(min=self.approach_t_min_sec, max=self.approach_t_max_sec, step=1, value=SETTINGS["DEFUALT_FULL_TIME"]) \
                 .classes("w-[34rem]").props('color=amber-8 label')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
             ui.label("sec")

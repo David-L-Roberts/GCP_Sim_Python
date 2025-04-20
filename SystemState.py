@@ -6,6 +6,9 @@ from MessageLib import ActionCodes, txMessageCodes
 
 
 class SystemMode:
+    '''
+    Class for managing system's mode of switching.
+    '''
     def __init__(self):
         self.__activeMode = ActionCodes.IDLE
 
@@ -32,6 +35,13 @@ class SystemMode:
 # ========================================================================================
 
 class SystemTimes:
+    '''
+    Class for managing time data related to relay switching periods.
+    Provides and sets info about:
+        - base-step-period
+        - total approach time
+        - progress of system towards total approach time
+    '''
     def __init__(self, comPort: ComPort):
         self.__comPort: ComPort = comPort
         self.__dynamSwitch: DynamicSwitch = DynamicSwitch()
@@ -49,6 +59,14 @@ class SystemTimes:
         self.approach_t_min_sec = int(SETTINGS["APPROACH_T_MIN_MS"]/1000)
         self.approach_t_max_sec = int(SETTINGS["APPROACH_T_MAX_MS"]/1000)
 
+        self.__set_defaults()
+
+    
+    def __set_defaults(self):
+        self.set_speed_fromFullTime_ms(SETTINGS["DEFUALT_FULL_TIME"])
+        self.set_approachProgTime_ms(0)
+
+    # ===========================================
 
     def set_speed_fromFullTime_ms(self, fullTime_ms: int):
         self.__approachFullTime_ms = fullTime_ms

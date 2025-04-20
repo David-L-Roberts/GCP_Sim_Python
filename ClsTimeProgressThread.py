@@ -26,7 +26,7 @@ class TimeProgressThread:
         self.target_function = self.mainThreadFunc
         self._stop_event = threading.Event()
         self._pause_event = threading.Event()
-        self._pause_event.clear()  # Start in paused state
+        self._pause_event.set()  # Start in paused state
         self._lock = threading.Lock()
 
         self._dynamSwitch: DynamicSwitch = DynamicSwitch()
@@ -36,6 +36,7 @@ class TimeProgressThread:
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def _run(self):
+        print("Thread running.")
         while not self._stop_event.is_set():
             self._pause_event.wait()  # Wait here if paused
             self.target_function()
@@ -64,9 +65,15 @@ class TimeProgressThread:
         self._pause_event.clear()
 
     def resume(self, direction=1):
+        ''' 
+        direction:
+            +1 for approach (decrease EZ)
+            -1 for departure (increase EZ)
+        '''
         print("Thread Resuming")
         self._pause_event.set()
         self._direction = direction
+        self.start()
 
     def is_paused(self):
         return not self._pause_event.is_set()
@@ -117,7 +124,7 @@ class TimeProgressThread:
         self._delay = self._dynamSwitch.getTimePerState(stateNum=self._stateNum, baseTime=self._baseStepT)
         self._stateNum += self._direction    # TODO <--- doesn't account for skipped states at low switching times ???
         progressTime_ms = self._systemTime.get_approachProgTime_ms() + self._delay
-        print()
+        print("progressTime_ms: ", progressTime_ms)
         self._systemTime.set_approachProgTime_ms(progressTime_ms)
 
         if (self._stateNum >= self.max_state) or (self._stateNum <= self.min_state):
