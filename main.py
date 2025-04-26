@@ -70,11 +70,13 @@ class MainApp:
         
         if self.dataProcessor.checkACK():
             Log.log("Arduino connected successfully.")
-            self.indLabelEnable.classes(replace=self.style_indLabel_connect)
-            self.indLabelDisable.classes(replace=self.style_indLabel_deactive)
+            self.label_controllerCommsHealth.classes(replace=self.style_indLabel_connect)
+            self.label_controllerCommsHealth.set_text("Connected")
 
             self.timerCheckComsHealth.deactivate()
             ui.notify("Arduino connected successfully", type='positive', position='center', progress=True, timeout=3_000)
+
+            self.initialise_switchingSpeed()
             return 
         
         else:
@@ -83,6 +85,10 @@ class MainApp:
             msg: bytes = txMessageCodes[ActionCodes.HMI_HELLO]
             self.comPort.writeSerial(msg)
             
+    def initialise_switchingSpeed(self):
+        self.systemTime.set_defaults()
+        self.systemTime.sendNewSwitchingTime()
+
 
     # ========================================================================================
     #   Header
@@ -106,15 +112,13 @@ class MainApp:
             # Controller status labels
             with ui.row().classes(f"basis-[{basis_statusText}%] flex-row justify-center text-lg"):
                 self.style_indLabel_connect = "text-center text-teal-200"
-                self.style_indLabel_deconnect = "text-center text-rose-300"
+                self.style_indLabel_disconnect = "text-center text-rose-300"
                 self.style_indLabel_deactive = "text-center text-stone-500"
 
                 ui.label("Controller Status: ") \
                     .classes("text-center text-bold text-[#818cf8]")
-                self.indLabelEnable = ui.label("Connected") \
-                    .classes(self.style_indLabel_deactive)
-                self.indLabelDisable = ui.label("Disconnected") \
-                    .classes(self.style_indLabel_deconnect)
+                self.label_controllerCommsHealth = ui.label("Disconnected") \
+                    .classes(self.style_indLabel_disconnect)
             
             # TODO: remove from function, and take as input.
                 # issue with different pages creating their own instance. Should all refer back to single object, which gives them the time string.

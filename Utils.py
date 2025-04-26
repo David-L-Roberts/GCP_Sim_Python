@@ -20,11 +20,10 @@ MIN_SPEED = 10      # minimum allowable speed in kph
 MAX_DIST = 3050     # maximum allowable distance in meters
 MIN_DIST = 100      # minimum allowable distance in meters
 
-DEFUALT_FULL_TIME = 120 # default full approach time in seconds
+DEFUALT_FULL_TIME_MS = 120_000 # default full approach time in milliseconds
 
 settings_temp["SWITCH_T_MULT"] = SWITCH_T_MULT
 settings_temp["SWITCH_BASE_MULT"] = SWITCH_BASE_MULT
-settings_temp["MAX_STATE"] = MAX_STATE
 settings_temp["MAX_STATE"] = MAX_STATE
 
 settings_temp["APPROACH_T_MIN_MS"] = APPROACH_T_MIN_MS
@@ -34,7 +33,7 @@ settings_temp["MIN_SPEED"] = MIN_SPEED
 settings_temp["MAX_DIST"] = MAX_DIST
 settings_temp["MIN_DIST"] = MIN_DIST
 
-settings_temp["DEFUALT_FULL_TIME"] = DEFUALT_FULL_TIME
+settings_temp["DEFUALT_FULL_TIME_MS"] = DEFUALT_FULL_TIME_MS
 
 
 # settings dictionary to be presented to other modules

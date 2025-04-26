@@ -13,6 +13,7 @@ class Page1MainBody:
 
         self.switch_t_mult = SETTINGS["SWITCH_T_MULT"]
         self.max_state = SETTINGS["MAX_STATE"]
+        self.min_state = 0
         self.approach_t_min_sec = int(SETTINGS["APPROACH_T_MIN_MS"]/1000)
         self.approach_t_max_sec = int(SETTINGS["APPROACH_T_MAX_MS"]/1000)
 
@@ -67,7 +68,7 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSystemState = ui.slider(min=0, max=self.max_state, step=1, value=0) \
+            self.sliderSystemState = ui.slider(min=self.min_state, max=self.max_state, step=1, value=0) \
                 .classes("w-[34rem]").props('color=pink-8 label')
             ui.label().bind_text_from(self.sliderSystemState, 'value')
             ui.label(f"/ {self.max_state}")
@@ -91,8 +92,12 @@ class Page1MainBody:
                 .classes("text-italic text-stone-200")
             
         with ui.row().classes("items-center"):
-            self.sliderSwitchTime = ui.slider(min=self.approach_t_min_sec, max=self.approach_t_max_sec, step=1, value=SETTINGS["DEFUALT_FULL_TIME"]) \
-                .classes("w-[34rem]").props('color=amber-8 label')
+            self.sliderSwitchTime = ui.slider(
+                min=self.approach_t_min_sec, 
+                max=self.approach_t_max_sec, 
+                step=1, 
+                value=SETTINGS["DEFUALT_FULL_TIME_MS"]/1000
+                ).classes("w-[34rem]").props('color=amber-8 label')
             ui.label().bind_text_from(self.sliderSwitchTime, 'value')
             ui.label("sec")
             ui.button("Update Speed", on_click=self.__buttonFunc_speedUpdate_1) \
@@ -169,11 +174,13 @@ class Page1MainBody:
     def __buttonFunc_resetEZHigh(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_HIGH_EZ])
         self.__systemMode.set_activeMode(ActionCodes.RESET_HIGH_EZ)
+        self.__systemMode.set_stateNum(self.min_state)
         ui.notify('Set EZ=100', position="top", type="info")
     
     def __buttonFunc_resetEZLow(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_LOW_EZ])
         self.__systemMode.set_activeMode(ActionCodes.RESET_LOW_EZ)
+        self.__systemMode.set_stateNum(self.max_state)
         ui.notify('Set EZ=0', position="top", type="info")
 
     # manual
@@ -181,16 +188,18 @@ class Page1MainBody:
         ui.notify(f"System state forced to: #{self.sliderSystemState.value}", position="top", type="info")   # <----------------------------- TODO
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.SET_STATE])
         self.__systemMode.set_activeMode(ActionCodes.MANUAL)
+        self.__systemMode.set_stateNum(self.sliderSystemState.value)
         self.__comPort.newSysState = True
         setStateActionCode: bytes = str(self.sliderSystemState.value).encode()
         self.__comPort.writeSerial(setStateActionCode)
+        
     
     def __buttonFunc_increaseState(self):
         if self.sliderSystemState.value < self.max_state:
             self.sliderSystemState.value += 1
     
     def __buttonFunc_decreaseState(self):
-        if self.sliderSystemState.value > 0:
+        if self.sliderSystemState.value > self.min_state:
             self.sliderSystemState.value -= 1
         
     # speedConfig

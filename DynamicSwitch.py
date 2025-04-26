@@ -29,7 +29,7 @@ class DynamicSwitch:
         baseTime_ms: int = math.ceil(fullTime_ms / dynamicCoeff)
         return baseTime_ms
 
-    def getTimePerState(self, stateNum: int, baseTime: int) -> int:
+    def getTimePerState(self, stateNum: int, baseTime_ms: int) -> int:
         '''
         Returns total time spent in a given state number, including the time adjustment. 
         Time is in ms.
@@ -39,9 +39,9 @@ class DynamicSwitch:
         '''
         
         # int timeAdjust = floor((7*pow(10, -6)*pow(stateNum, 2) - 0.0055*stateNum + 1.02) * (switchTime*SWITCH_BASE_MULT)); // c code from microcontroller
-        timeAdjust: int = math.floor(self.__dynamFuncNormalised(stateNum) * (baseTime*self.switch_base_mult));
-        timeStepFull: int =  baseTime + timeAdjust
-        return timeStepFull
+        timeAdjust_ms: int = math.floor(self.__dynamFuncNormalised(stateNum) * (baseTime_ms*self.switch_base_mult))
+        timeStepFull_ms: int =  baseTime_ms + timeAdjust_ms
+        return timeStepFull_ms
 
 
     def __dynamFuncNormalised(self, stateNum: int) -> float:

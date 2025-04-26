@@ -2,6 +2,8 @@ from nicegui import ui
 from MessageLib import ActionCodes
 from SystemState import SystemMode, SystemTimes
 from ClsTimeProgressThread import TimeProgressThread
+from Utils import SETTINGS
+
 
 class clsFooter:
     def __init__(self, systemTime: SystemTimes, systemMode: SystemMode, timeProgressThread: TimeProgressThread):
@@ -17,18 +19,16 @@ class clsFooter:
         self.__systemTime.subscribeTo_fullTimeChange(self.updateTotalApproachTime)
         self.__systemTime.subscribeTo_progTimeChange(self.updatePogressApproachTime)
         self.__systemMode.subscribeTo_activeModeChange(self.update_activeMode)
+        self.__systemMode.subscribeTo_stateNumChange(self.update_stateNum)
 
     def __add_footer(self):
-        with ui.row().classes("gap-[5px] ml-[20px]"):
+        with ui.row().classes("gap-[5px] ml-[20px] basis[30%] flex-row flex-grow-0"):
             ui.label("Active Mode: ").classes("font-bold")
             self.label_activeMode = ui.label(ActionCodes.IDLE)
         
-        with ui.row().classes("gap-[5px]"):
-            minTime = 25
-            currentTime = 35
-            totalTime = 120
-
-            percentProgress = currentTime / totalTime
+        with ui.row().classes("gap-[5px] flex-row flex-grow-1"):
+            currentTime = 0
+            totalTime = 0
 
             ui.label("Approach Time progress: ").classes("font-bold")
             self.label_progressTime_sec = ui.label(currentTime)
@@ -36,10 +36,10 @@ class clsFooter:
             self.label_totalTime_sec = ui.label(f"/ {totalTime} sec")
             self.progressBar_approach = ui.linear_progress(value=0, show_value=False, color="indigo-300")
 
-        with ui.row().classes("gap-[5px] mr-[20px]"):
+        with ui.row().classes("gap-[5px] mr-[20px] basis[30%] flex-row flex-grow-0"):
             ui.label("Current Sys State:").classes("font-bold")
-            ui.label("00")
-            ui.label("/ 299")
+            self.label_stateNum  = ui.label("0")
+            ui.label(f"/ {SETTINGS['MAX_STATE']}")
     
     # ===========================================
 
@@ -49,14 +49,20 @@ class clsFooter:
         # self.__updateProgressBar()
     
     def updatePogressApproachTime(self):
-        print("prog time subscriber activated!")
-        self.progressTime_sec = self.__systemTime.get_approachProgTime_ms()
+        self.progressTime_sec = round(self.__systemTime.get_approachProgTime_ms()/1000)
         self.label_progressTime_sec.set_text(self.progressTime_sec)
         self.__updateProgressBar()
 
     def __updateProgressBar(self):
-        percentProgress = self.progressTime_sec / self.totalTime_sec
+        if self.totalTime_sec == 0:
+            percentProgress = 0
+        else:
+            percentProgress = self.progressTime_sec / self.totalTime_sec
+        
         self.progressBar_approach.set_value(percentProgress)
     
     def update_activeMode(self):
         self.label_activeMode.set_text(self.__systemMode.get_activeMode())
+    
+    def update_stateNum(self):
+        self.label_stateNum.set_text(self.__systemMode.get_stateNum())

@@ -10,9 +10,11 @@ class SystemMode:
     Class for managing system's mode of switching.
     '''
     def __init__(self):
-        self.__activeMode = ActionCodes.IDLE
+        self.__activeMode: ActionCodes = ActionCodes.IDLE
+        self.__stateNum: int = 0
 
         self.__subscribersActiveMode: list = []
+        self.__subscribersStateNum: list = []
 
     def set_activeMode(self, newMode: ActionCodes):
         self.__activeMode = newMode
@@ -20,6 +22,13 @@ class SystemMode:
     
     def get_activeMode(self):
         return self.__activeMode
+    
+    def set_stateNum(self, newStateNum: int):
+        self.__stateNum = newStateNum
+        self.__updateSubscribers_stateNum()
+
+    def get_stateNum(self):
+        return self.__stateNum
     
     # ===========================================
 
@@ -29,6 +38,14 @@ class SystemMode:
     def __updateSubscribers_activeMode(self):
         callFunc: callable = None
         for callFunc in self.__subscribersActiveMode:
+            callFunc()
+
+    def subscribeTo_stateNumChange(self, callFunc: callable):
+        self.__subscribersStateNum.append(callFunc)
+    
+    def __updateSubscribers_stateNum(self):
+        callFunc: callable = None
+        for callFunc in self.__subscribersStateNum:
             callFunc()
     
 
@@ -59,11 +76,9 @@ class SystemTimes:
         self.approach_t_min_sec = int(SETTINGS["APPROACH_T_MIN_MS"]/1000)
         self.approach_t_max_sec = int(SETTINGS["APPROACH_T_MAX_MS"]/1000)
 
-        self.__set_defaults()
-
     
-    def __set_defaults(self):
-        self.set_speed_fromFullTime_ms(SETTINGS["DEFUALT_FULL_TIME"])
+    def set_defaults(self):
+        self.set_speed_fromFullTime_ms(SETTINGS["DEFUALT_FULL_TIME_MS"])
         self.set_approachProgTime_ms(0)
 
     # ===========================================
@@ -92,9 +107,11 @@ class SystemTimes:
     def get_approachFullTime_sec(self):
         return int(self.__approachFullTime_ms / 1000)
     
+    def get_baseStepPeriod_ms(self):
+        return self.__baseStepPeriod_ms
+    
 
     def set_approachProgTime_ms(self, progressTime_ms: int):
-        print("prog Time updated: ", progressTime_ms)
         self.__approachProgTime_ms = progressTime_ms
         self.__updateSubscribers_progTime()
 
