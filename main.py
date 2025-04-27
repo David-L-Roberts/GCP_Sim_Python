@@ -58,7 +58,7 @@ class MainApp:
         with ui.element('div').classes(f"w-full {C_MAIN_BODY_1} relative px-2 py-2"):
             self.add_main_body()
         # page footer
-        with ui.footer().classes(f'{C_FOOTER_DEFAULT} flex flex-row justify-between p-[10px] text-lg text-gray-400'):
+        with ui.footer().classes(f'{C_FOOTER_DEFAULT} p-[10px] text-lg text-gray-400'):
             self.add_footer()
 
         # object for processing received serial data

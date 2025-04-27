@@ -38,8 +38,8 @@ class DynamicSwitch:
             self.__lookup_stateNumToDelayMs[stateNum] = delayTime
         
         print("populate Lookup tables")
-        print(self.max_state+1)
         print(self.__lookup_stateNumToProgTimeMs[self.max_state])
+        print(self.__lookup_stateNumToProgTimeMs[0])
         print(timeProgress_ms)
         self.__fullTime_ms = timeProgress_ms
 

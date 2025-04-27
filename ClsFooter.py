@@ -14,7 +14,8 @@ class clsFooter:
         self.totalTime_sec: int = 0
         self.progressTime_sec: int = 0
 
-        self.__add_footer()
+        with ui.row().classes("w-screen flex flex-row justify-between"):
+            self.__add_footer()
 
         self.__systemTime.subscribeTo_fullTimeChange(self.updateTotalApproachTime)
         self.__systemTime.subscribeTo_progTimeChange(self.updatePogressApproachTime)
@@ -22,11 +23,11 @@ class clsFooter:
         self.__systemMode.subscribeTo_stateNumChange(self.update_stateNum)
 
     def __add_footer(self):
-        with ui.row().classes("gap-[5px] ml-[20px] basis[30%] flex-row flex-grow-0"):
+        with ui.row().classes("gap-[5px] ml-[20px] basis-[260px] flex-row justify-start"):
             ui.label("Active Mode: ").classes("font-bold")
             self.label_activeMode = ui.label(ActionCodes.IDLE)
         
-        with ui.row().classes("gap-[5px] flex-row flex-grow-1"):
+        with ui.row().classes("gap-[5px] flex-row basis-[35%] flex-row justify-center"):
             currentTime = 0
             totalTime = 0
 
@@ -36,7 +37,7 @@ class clsFooter:
             self.label_totalTime_sec = ui.label(f"/ {totalTime} sec")
             self.progressBar_approach = ui.linear_progress(value=0, show_value=False, color="indigo-300")
 
-        with ui.row().classes("gap-[5px] mr-[20px] basis[30%] flex-row flex-grow-0"):
+        with ui.row().classes("gap-[5px] mr-[20px] basis-[260px] flex-row justify-end"):
             ui.label("Current Sys State:").classes("font-bold")
             self.label_stateNum  = ui.label("0")
             ui.label(f"/ {SETTINGS['MAX_STATE']}")

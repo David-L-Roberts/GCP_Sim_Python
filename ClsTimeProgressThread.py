@@ -46,7 +46,7 @@ class TimeProgressThread:
                 print("current_delay_sec", current_delay_sec)
             time.sleep(current_delay_sec)
 
-    def start(self, direction=1):
+    def start(self):
         ''' 
         direction:
             +1 for approach (decrease EZ)
@@ -54,7 +54,6 @@ class TimeProgressThread:
         '''
         if not self._thread.is_alive():
             self._thread.start()
-            self._direction = direction
 
     def stop(self):
         self._stop_event.set()
@@ -72,8 +71,8 @@ class TimeProgressThread:
             -1 for departure (increase EZ)
         '''
         print("Thread Resuming")
-        self._pause_event.set()
         self._direction = direction
+        self._pause_event.set()
         self.start()
 
     def is_paused(self):
