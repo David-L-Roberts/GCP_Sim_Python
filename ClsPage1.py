@@ -11,8 +11,13 @@ class Page1MainBody:
         self.__systemTime: SystemTimes = systemTime
         self.__systemMode: SystemMode = systemMode
 
+        # import values from settings
         self.switch_t_mult = SETTINGS["SWITCH_T_MULT"]
         self.max_state = SETTINGS["MAX_STATE"]
+        self.min_speed = SETTINGS["MIN_SPEED"]
+        self.max_speed = SETTINGS["MAX_SPEED"]
+        self.min_dist = SETTINGS["MIN_DIST"]
+        self.max_dist = SETTINGS["MAX_DIST"]
         self.min_state = 0
         self.approach_t_min_sec = int(SETTINGS["APPROACH_T_MIN_MS"]/1000)
         self.approach_t_max_sec = int(SETTINGS["APPROACH_T_MAX_MS"]/1000)
@@ -120,21 +125,21 @@ class Page1MainBody:
                 .classes("text-lg text-[#ffecb3]")
             ui.label("A different way of controlling the switching speed.") \
                 .classes("text-italic text-stone-200")
-            
+
         with ui.row().classes("items-center"):
             self.inputTrainSpeed = ui.input(label='Train Speed (km/h)', placeholder=f'{SETTINGS["MIN_SPEED"]} - {SETTINGS["MAX_SPEED"]}',
                 on_change=self.__calcFullTimeSec_FromDistSpeed,
                 validation= {
-                    'Speed too Low': lambda value: (int(value)) >= SETTINGS["MIN_SPEED"],
-                    'Speed too High': lambda value: (int(value)) <= SETTINGS["MAX_SPEED"],
+                    'Speed too Low': lambda value: (int(value)) >= self.min_speed,
+                    'Speed too High': lambda value: (int(value)) <= self.max_speed,
                 }
             ).classes("w-[14rem]")
 
             self.inputTrainDistance = ui.input(label='Approach Distance (meters)', placeholder=f'{SETTINGS["MIN_DIST"]} - {SETTINGS["MAX_DIST"]}',
                 on_change=self.__calcFullTimeSec_FromDistSpeed,
                 validation= {
-                    'Distance too Low': lambda value: (int(value)) >= SETTINGS["MIN_DIST"],
-                    'Distance too High': lambda value: (int(value)) <= SETTINGS["MAX_DIST"],
+                    'Distance too Low': lambda value: (int(value)) >= self.min_dist,
+                    'Distance too High': lambda value: (int(value)) <= self.max_dist,
                 }
             ).classes("w-[14rem]")
 
@@ -173,24 +178,34 @@ class Page1MainBody:
     # resetEZ
     def __buttonFunc_resetEZHigh(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_HIGH_EZ])
+
         self.__systemMode.set_activeMode(ActionCodes.RESET_HIGH_EZ)
         self.__systemMode.set_stateNum(self.min_state)
+        self.__systemTime.set_approachProgTime(stateNum=self.min_state)
+
         ui.notify('Set EZ=100', position="top", type="info")
     
     def __buttonFunc_resetEZLow(self):
         self.__comPort.writeSerial(txMessageCodes[ActionCodes.RESET_LOW_EZ])
+
         self.__systemMode.set_activeMode(ActionCodes.RESET_LOW_EZ)
         self.__systemMode.set_stateNum(self.max_state)
+        self.__systemTime.set_approachProgTime(stateNum=self.max_state)
+
         ui.notify('Set EZ=0', position="top", type="info")
 
     # manual
     def __buttonFunc_setState(self):
-        ui.notify(f"System state forced to: #{self.sliderSystemState.value}", position="top", type="info")   # <----------------------------- TODO
-        self.__comPort.writeSerial(txMessageCodes[ActionCodes.SET_STATE])
+        stateNum = self.sliderSystemState.value
+        ui.notify(f"System state forced to: #{stateNum}", position="top", type="info")   # <----------------------------- TODO
+
         self.__systemMode.set_activeMode(ActionCodes.MANUAL)
-        self.__systemMode.set_stateNum(self.sliderSystemState.value)
+        self.__systemMode.set_stateNum(stateNum)
+        self.__systemTime.set_approachProgTime(stateNum=stateNum)
+
+        self.__comPort.writeSerial(txMessageCodes[ActionCodes.SET_STATE])
         self.__comPort.newSysState = True
-        setStateActionCode: bytes = str(self.sliderSystemState.value).encode()
+        setStateActionCode: bytes = str(stateNum).encode()
         self.__comPort.writeSerial(setStateActionCode)
         
     

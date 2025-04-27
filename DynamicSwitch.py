@@ -1,24 +1,18 @@
 import math
 from Utils import SETTINGS
+import array
 
 class DynamicSwitch:
     def __init__(self):
         self.switch_base_mult = SETTINGS["SWITCH_BASE_MULT"]
         self.max_state = SETTINGS["MAX_STATE"]
+
+        self.__lookup_stateNumToProgTimeMs: array.array = array.array('I', [0]*(self.max_state+1))
+        self.__lookup_stateNumToDelayMs: array.array = array.array('I', [0]*(self.max_state+1))
+        self.__fullTime_ms: int = 0
+        self.__baseTime_ms: int = 0
     
-    def calcFullTime(self, baseTime_ms: int) -> int:
-        '''
-        Returns the full system switching time (from EZ=100 -> EZ=0).
-        Full switching time is in milliseconds.
-        '''
-        fullTime_ms = 0
-        for stateNum in range(0, self.max_state+1):
-            fullTime_ms += self.getTimePerState(stateNum, baseTime_ms)
-        
-        return fullTime_ms
-    
-    
-    def calcBaseStepTime(self, fullTime_ms: int) -> int:
+    def calcBaseStepTimeMs(self, fullTime_ms: int) -> int:
         '''
         Returns the base step time for a given full switching time, in milliseconds.
         '''
@@ -27,9 +21,29 @@ class DynamicSwitch:
             dynamicCoeff += self.__dynamFuncNormalised(stateNum) * self.switch_base_mult + 1
 
         baseTime_ms: int = math.ceil(fullTime_ms / dynamicCoeff)
+        self.__populateLookupTables(baseTime_ms=baseTime_ms)
         return baseTime_ms
 
-    def getTimePerState(self, stateNum: int, baseTime_ms: int) -> int:
+    # ===========================================
+    
+    def __populateLookupTables(self, baseTime_ms: int):
+        self.__baseTime_ms = baseTime_ms
+        timeProgress_ms: int = 0
+        for stateNum in range(0, self.max_state+1):
+            self.__lookup_stateNumToProgTimeMs[stateNum] = timeProgress_ms
+
+            delayTime = self.__calcStateDelayMs(stateNum, baseTime_ms)
+            timeProgress_ms += delayTime
+            
+            self.__lookup_stateNumToDelayMs[stateNum] = delayTime
+        
+        print("populate Lookup tables")
+        print(self.max_state+1)
+        print(self.__lookup_stateNumToProgTimeMs[self.max_state])
+        print(timeProgress_ms)
+        self.__fullTime_ms = timeProgress_ms
+
+    def __calcStateDelayMs(self, stateNum: int, baseTime_ms: int) -> int:
         '''
         Returns total time spent in a given state number, including the time adjustment. 
         Time is in ms.
@@ -49,3 +63,17 @@ class DynamicSwitch:
         timeAdjustNorm: float = 7*math.pow(10, -6)*math.pow(stateNum, 2) - 0.0055*stateNum + 1.02
         return timeAdjustNorm
 
+    # ===========================================
+
+    def getStateDelayMs(self, stateNum: int):
+        return self.__lookup_stateNumToDelayMs[stateNum]
+    
+    def getProgressTimeMs(self, stateNum: int):
+        return self.__lookup_stateNumToProgTimeMs[stateNum]
+    
+    def getFullTimeMs(self) -> int:
+        '''
+        Returns the full system switching time (from EZ=100 -> EZ=0).
+        Full switching time is in milliseconds.
+        '''
+        return self.__fullTime_ms

@@ -59,9 +59,9 @@ class SystemTimes:
         - total approach time
         - progress of system towards total approach time
     '''
-    def __init__(self, comPort: ComPort):
+    def __init__(self, comPort: ComPort, dynamicSwitch: DynamicSwitch):
         self.__comPort: ComPort = comPort
-        self.__dynamSwitch: DynamicSwitch = DynamicSwitch()
+        self.__dynamSwitch: DynamicSwitch = dynamicSwitch
 
         self.__subscribersFullTime: list = []
         self.__subscribersProgTime: list = []
@@ -79,13 +79,13 @@ class SystemTimes:
     
     def set_defaults(self):
         self.set_speed_fromFullTime_ms(SETTINGS["DEFUALT_FULL_TIME_MS"])
-        self.set_approachProgTime_ms(0)
+        self.set_approachProgTime(0)
 
     # ===========================================
 
     def set_speed_fromFullTime_ms(self, fullTime_ms: int):
         self.__approachFullTime_ms = fullTime_ms
-        self.__baseStepPeriod_ms = self.__dynamSwitch.calcBaseStepTime(fullTime_ms=self.__approachFullTime_ms )
+        self.__baseStepPeriod_ms = self.__dynamSwitch.calcBaseStepTimeMs(fullTime_ms=self.__approachFullTime_ms)
 
         self.__updateSubscribers_fullTime()
 
@@ -101,6 +101,12 @@ class SystemTimes:
 
         self.set_speed_fromFullTime_ms(fullTime_ms=self.__approachFullTime_ms)
 
+    def set_approachProgTime(self, stateNum: int):
+        self.__approachProgTime_ms = self.__dynamSwitch.getProgressTimeMs(stateNum=stateNum)
+        self.__updateSubscribers_progTime()
+
+    # ===========================================
+
     def get_approachFullTime_ms(self):
         return self.__approachFullTime_ms
     
@@ -110,11 +116,6 @@ class SystemTimes:
     def get_baseStepPeriod_ms(self):
         return self.__baseStepPeriod_ms
     
-
-    def set_approachProgTime_ms(self, progressTime_ms: int):
-        self.__approachProgTime_ms = progressTime_ms
-        self.__updateSubscribers_progTime()
-
     def get_approachProgTime_ms(self):
         return self.__approachProgTime_ms
     

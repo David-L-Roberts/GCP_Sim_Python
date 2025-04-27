@@ -10,7 +10,7 @@ class TimeProgressThread:
     '''
     Starts a thread used for estimating the apporach time progress.
     '''
-    def __init__(self, systemTime: SystemTimes, systemMode: SystemMode, initial_baseStepT_sec=1.0):
+    def __init__(self, systemTime: SystemTimes, systemMode: SystemMode, dynamicSwitch: DynamicSwitch, initial_baseStepT_sec=1.0):
         self._systemTime: SystemTimes = systemTime
         self._systemMode: SystemMode = systemMode
 
@@ -28,7 +28,7 @@ class TimeProgressThread:
         self._pause_event.set()  # Start in paused state
         self._lock = threading.Lock()
 
-        self._dynamSwitch: DynamicSwitch = DynamicSwitch()
+        self._dynamSwitch: DynamicSwitch = dynamicSwitch
 
         self._systemMode.subscribeTo_activeModeChange(self.threadActiveCheck)
         self._systemTime.subscribeTo_fullTimeChange(self.set_baseStepT)
@@ -120,23 +120,17 @@ class TimeProgressThread:
         if ((stateNum >= self.max_state) and (self._direction == 1)) \
                 or ((stateNum <= self.min_state) and (self._direction == -1)):
             print("StateNum Threshold Reached", stateNum)
+            self._systemMode.set_activeMode(ActionCodes.IDLE)
             self.pause()
             return
         
         # move to next state
-        self._delay_ms = self._dynamSwitch.getTimePerState(stateNum=stateNum, baseTime_ms=self._baseStepT_ms)
-        progressTime_ms = self._systemTime.get_approachProgTime_ms() + (self._direction * self._delay_ms)
-        
+        self._delay_ms = self._dynamSwitch.getStateDelayMs(stateNum=stateNum)
+        self._systemTime.set_approachProgTime(stateNum=stateNum)
+
         stateNum += self._direction    # TODO <--- doesn't account for skipped states at low switching times ???
         self._systemMode.set_stateNum(stateNum)
-
+        
         # DEBUG
         print("_direction", self._direction)
         print("_stateNum: ", stateNum)
-
-        # TODO: change progress time to come from stateNum, instead of adding up delay times 
-            # getApproachProgTime_ms(stateNum) -> use dynamic func to get progress time or percent of fullTime
-            # will also help solve rounding issues.
-        self._systemTime.set_approachProgTime_ms(progressTime_ms)
-
-        

@@ -1,0 +1,28 @@
+{
+  "test_cases": [
+    {
+      "name": "Test Case 1",
+      "time": 120.0,
+      "distance": 500.0,
+      "speed": 4.2,
+      "stop": true,
+      "pause_time": 10.0
+    },
+    {
+      "name": "Test Case 2",
+      "time": 90.5,
+      "distance": 300.0,
+      "speed": 3.3,
+      "stop": false,
+      "pause_time": 0.0
+    },
+    {
+      "name": "Test Case 3",
+      "time": 150.0,
+      "distance": 600.0,
+      "speed": 4.0,
+      "stop": true,
+      "pause_time": 5.5
+    }
+  ]
+}

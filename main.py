@@ -8,6 +8,7 @@ from DataProcessor import DataProcessor
 from ComReader import ComReader
 from ComPort import ComPort
 from SystemState import SystemMode, SystemTimes
+from DynamicSwitch import DynamicSwitch
 
 from MessageLib import ActionCodes, txMessageCodes
 from Utils import SETTINGS
@@ -39,9 +40,17 @@ class MainApp:
         # Handle data received from serial 
         self.comReader = ComReader(self.comPort)
 
-        self.systemTime: SystemTimes = SystemTimes(comPort=self.comPort)
+        self.dynamSwitch: DynamicSwitch = DynamicSwitch()
+        self.systemTime: SystemTimes = SystemTimes(
+            comPort=self.comPort, 
+            dynamicSwitch=self.dynamSwitch
+        )
         self.systemMode: SystemMode = SystemMode()
-        self.timeProgressThread = TimeProgressThread(systemTime=self.systemTime, systemMode=self.systemMode)
+        self.timeProgressThread = TimeProgressThread(
+            systemTime=self.systemTime, 
+            systemMode=self.systemMode, 
+            dynamicSwitch=self.dynamSwitch
+        )
 
         # page header
         self.add_header()
