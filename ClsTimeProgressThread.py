@@ -130,6 +130,3 @@ class TimeProgressThread:
         stateNum += self._direction    # TODO <--- doesn't account for skipped states at low switching times ???
         self._systemMode.set_stateNum(stateNum)
         
-        # DEBUG
-        print("_direction", self._direction)
-        print("_stateNum: ", stateNum)
