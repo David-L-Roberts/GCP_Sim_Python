@@ -17,6 +17,7 @@ from Logging import Log
 from ClsPage1 import Page1MainBody
 from ClsFooter import clsFooter
 from ClsTimeProgressThread import TimeProgressThread
+from ClsAutoTestCase import AutoTestCase
 from StyleSettings import *
 
 DEBUG = True
@@ -60,6 +61,8 @@ class MainApp:
         # page footer
         with ui.footer().classes(f'{C_FOOTER_DEFAULT} p-[10px] text-lg text-gray-400'):
             self.add_footer()
+        
+        # self.add_new_page()
 
         # object for processing received serial data
         self.dataProcessor = DataProcessor(self.headerRow, self.clockLabel)
@@ -178,8 +181,8 @@ class MainApp:
                     auto_close=False
                 )
                 ui.menu_item(
-                    'TBD', 
-                    lambda: print("VideoSelector.setSource(1)"),
+                    'Test-btn-01', 
+                    self.menu_testBtn01,
                     auto_close=False
                 )
                 ui.menu_item(
@@ -255,6 +258,9 @@ class MainApp:
     def testButton(self):
         print(self.comReader._rxDataQueue)
 
+    def menu_testBtn01(self):
+        print("Test Button pressed")
+        AutoTestCase()
 
     # ========================================================================================
     #   NEW PAGE
